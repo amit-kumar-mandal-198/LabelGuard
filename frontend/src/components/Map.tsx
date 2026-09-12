@@ -258,7 +258,14 @@ const HOTSPOTS: Hotspot[] = [
   },
 ];
 
-export default function Map() {
+export { HOTSPOTS };
+export type { Hotspot };
+
+interface MapProps {
+  onHotspotClick?: (hotspot: Hotspot) => void;
+}
+
+export default function Map({ onHotspotClick }: MapProps) {
   const getMarkerColor = (type: Hotspot['type']) => {
     switch (type) {
       case 'critical':
@@ -292,6 +299,9 @@ export default function Map() {
               weight: 2,
             }}
             radius={radius}
+            eventHandlers={{
+              click: () => onHotspotClick?.(spot),
+            }}
           >
             <Popup>
               <div className="p-1 min-w-[190px] text-xs">
@@ -317,6 +327,17 @@ export default function Map() {
                   <span>Scans: {spot.scans}</span>
                   {spot.rate && <span className="font-bold text-emerald-700">{spot.rate}</span>}
                 </div>
+                {onHotspotClick && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onHotspotClick(spot);
+                    }}
+                    className="mt-2 w-full text-center text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded py-1 transition"
+                  >
+                    Open Jurisdiction Dossier →
+                  </button>
+                )}
               </div>
             </Popup>
           </CircleMarker>
