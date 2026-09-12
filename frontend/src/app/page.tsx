@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/auth-context';
 import { canAccess } from '@/lib/route-guard';
 import InteractiveAiSandbox from '@/components/home/InteractiveAiSandbox';
 import StatutoryLifecycleStepper from '@/components/home/StatutoryLifecycleStepper';
+import AmbientAuroraSmoke from '@/components/home/AmbientAuroraSmoke';
 
 export default function Home() {
   const { user, isAuthenticated, login } = useAuth();
@@ -45,11 +46,14 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="relative w-full flex flex-col items-center overflow-x-hidden">
+      {/* Interactive Ambient Aurora Smoke Nebula */}
+      <AmbientAuroraSmoke />
+
       {/* Hero Section */}
-      <section className="w-full bg-gradient-to-b from-white via-emerald-50/30 to-zinc-50 border-b border-zinc-200 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-semibold tracking-wide">
+      <section className="relative w-full bg-gradient-to-b from-white/75 via-emerald-50/25 to-zinc-50/50 backdrop-blur-[1.5px] border-b border-zinc-200/80 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 max-w-6xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100/90 backdrop-blur-xs border border-emerald-300/80 text-emerald-900 text-xs font-semibold tracking-wide shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
             <span>National Packaged Commodity Regulatory Infrastructure • LM-PC-2011</span>
           </div>
