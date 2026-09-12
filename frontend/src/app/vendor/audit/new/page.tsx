@@ -62,21 +62,21 @@ export default function NewSelfAuditPage() {
       setSku('NR-DIG-500G');
       setDeclaredMrp(145);
       setNetQuantity('500 g');
-      setPreviewUrl('https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=800&q=80');
+      setPreviewUrl('/samples/biscuits.jpg');
     } else if (type === 'font_defect') {
       setProductName('GlowHerb Ayurvedic Hair Oil');
       setBrand('GlowHerb Natural Care');
       setSku('GH-AHO-100ML');
       setDeclaredMrp(180);
       setNetQuantity('100 ml');
-      setPreviewUrl('https://images.unsplash.com/photo-1608248597359-007e050044fa?auto=format&fit=crop&w=800&q=80');
+      setPreviewUrl('/samples/hairoil.jpg');
     } else {
       setProductName('CrispWave Kettle Cooked Chips');
       setBrand('CrispWave Snacks Ltd');
       setSku('CW-KC-75G');
       setDeclaredMrp(50);
       setNetQuantity('75 g');
-      setPreviewUrl('https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=800&q=80');
+      setPreviewUrl('/samples/chips.jpg');
     }
   };
 

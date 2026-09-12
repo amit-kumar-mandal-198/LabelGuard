@@ -216,7 +216,7 @@ export const SAMPLE_INSPECTIONS: InspectionRecord[] = [
     status: 'NON_COMPLIANT',
     complianceScore: 68,
     createdAt: '2026-09-08T11:15:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1608248597359-007e050044fa?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/samples/hairoil.jpg',
     tamperDetected: false,
     scanSource: 'field_inspector',
     declarations: [

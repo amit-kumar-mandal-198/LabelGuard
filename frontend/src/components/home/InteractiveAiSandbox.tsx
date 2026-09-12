@@ -45,8 +45,7 @@ const SAMPLE_PRODUCTS: SampleProduct[] = [
     badge: '100% Compliant Baseline',
     status: 'compliant',
     complianceScore: 100,
-    image:
-      'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=800&q=80',
+    image: '/samples/biscuits.jpg',
     verdict:
       'Fully compliant under LM (Packaged Commodities) Rules 2011. Pre-print certificate eligible.',
     findings: [
@@ -110,8 +109,7 @@ const SAMPLE_PRODUCTS: SampleProduct[] = [
     badge: 'Rule 9(6) Font Height Violation',
     status: 'warning',
     complianceScore: 68,
-    image:
-      'https://images.unsplash.com/photo-1608248597359-007e050044fa?auto=format&fit=crop&w=800&q=80',
+    image: '/samples/hairoil.jpg',
     verdict:
       'Defect Detected: Numeral height is 0.72mm, failing mandatory Table I minimum of 1.0mm.',
     findings: [
@@ -165,8 +163,7 @@ const SAMPLE_PRODUCTS: SampleProduct[] = [
     badge: 'Critical Dual-MRP Sticker Tamper',
     status: 'critical',
     complianceScore: 42,
-    image:
-      'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=800&q=80',
+    image: '/samples/chips.jpg',
     verdict:
       'Critical Breach: Illegal secondary sticker (₹50) overlaid on original printed MRP (₹35). Section 36 Notice queued.',
     findings: [
@@ -388,6 +385,9 @@ export default function InteractiveAiSandbox() {
                 <img
                   src={selectedProduct.image}
                   alt={selectedProduct.name}
+                  onError={(e) => {
+                    e.currentTarget.src = '/samples/prodcut.png';
+                  }}
                   className="w-full h-80 sm:h-96 object-cover opacity-85"
                 />
 
