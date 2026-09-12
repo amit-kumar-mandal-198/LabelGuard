@@ -136,10 +136,14 @@ export default function DistrictControllerDashboard() {
               <span className="font-bold text-zinc-800">
                 Spatial Density Hotspot Map (Noida, Greater Noida, Kanpur Retail Corridors)
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="flex items-center gap-1 text-[11px] text-rose-700 font-semibold">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
                   High Violation Cluster
+                </span>
+                <span className="flex items-center gap-1 text-[11px] text-amber-700 font-semibold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  Watchlist / Warning
                 </span>
                 <span className="flex items-center gap-1 text-[11px] text-emerald-700 font-semibold">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
