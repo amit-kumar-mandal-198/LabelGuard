@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calculator, 
   ShieldAlert, 
@@ -14,10 +14,20 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 
+// Deterministic number formatter to avoid SSR/Client locale hydration mismatch
+const formatNum = (val: number): string => {
+  return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
 export default function FinancialRiskCalculator() {
+  const [mounted, setMounted] = useState<boolean>(false);
   const [batchSize, setBatchSize] = useState<number>(50000);
   const [unitPackagingCost, setUnitPackagingCost] = useState<number>(14);
   const [potentialViolations, setPotentialViolations] = useState<number>(2);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Financial Calculations
   const prePrintTweakCost = 10 * potentialViolations; // ₹10 per digital artwork file fix
@@ -49,7 +59,7 @@ export default function FinancialRiskCalculator() {
 
         <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl font-mono text-xs font-bold shrink-0">
           <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-          <span>{roiMultiplier.toLocaleString()}x Capital ROI</span>
+          <span suppressHydrationWarning>{formatNum(roiMultiplier)}x Capital ROI</span>
         </div>
       </div>
 
@@ -61,8 +71,8 @@ export default function FinancialRiskCalculator() {
           <div>
             <div className="flex justify-between items-center mb-1.5 font-semibold text-zinc-800">
               <span>Production Batch Run Size:</span>
-              <span className="font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                {batchSize.toLocaleString()} units
+              <span suppressHydrationWarning className="font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                {formatNum(batchSize)} units
               </span>
             </div>
             <input
@@ -84,7 +94,7 @@ export default function FinancialRiskCalculator() {
           <div>
             <div className="flex justify-between items-center mb-1.5 font-semibold text-zinc-800">
               <span>Unit Packaging / Cartoning Cost:</span>
-              <span className="font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+              <span suppressHydrationWarning className="font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
                 ₹ {unitPackagingCost} / unit
               </span>
             </div>
@@ -107,7 +117,7 @@ export default function FinancialRiskCalculator() {
           <div>
             <div className="flex justify-between items-center mb-1.5 font-semibold text-zinc-800">
               <span>Vulnerable Pre-Print SKUs:</span>
-              <span className="font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+              <span suppressHydrationWarning className="font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
                 {potentialViolations} SKU Flags
               </span>
             </div>
@@ -134,21 +144,27 @@ export default function FinancialRiskCalculator() {
             <div className="space-y-1.5 text-zinc-600 text-[11px]">
               <div className="flex justify-between">
                 <span>Sec 36 Statutory Compounding:</span>
-                <span className="font-mono font-semibold text-rose-900">₹ {statutoryFineRisk.toLocaleString()}</span>
+                <span suppressHydrationWarning className="font-mono font-semibold text-rose-900">
+                  ₹ {formatNum(statutoryFineRisk)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Carton Scrap & Repackaging:</span>
-                <span className="font-mono font-semibold text-rose-900">₹ {physicalRepackagingLoss.toLocaleString()}</span>
+                <span suppressHydrationWarning className="font-mono font-semibold text-rose-900">
+                  ₹ {formatNum(physicalRepackagingLoss)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Distributor Reverse Logistics:</span>
-                <span className="font-mono font-semibold text-rose-900">₹ {reverseLogisticsLoss.toLocaleString()}</span>
+                <span suppressHydrationWarning className="font-mono font-semibold text-rose-900">
+                  ₹ {formatNum(reverseLogisticsLoss)}
+                </span>
               </div>
             </div>
             <div className="pt-2 border-t border-rose-200 flex justify-between items-baseline">
               <span className="font-bold text-rose-950 text-xs">Total Market Penalty:</span>
-              <span className="font-mono font-extrabold text-base text-rose-700">
-                ₹ {totalMarketFailureRisk.toLocaleString()}
+              <span suppressHydrationWarning className="font-mono font-extrabold text-base text-rose-700">
+                ₹ {formatNum(totalMarketFailureRisk)}
               </span>
             </div>
           </div>
@@ -161,7 +177,9 @@ export default function FinancialRiskCalculator() {
             <div className="space-y-1.5 text-zinc-600 text-[11px]">
               <div className="flex justify-between">
                 <span>Vector Typography Fix:</span>
-                <span className="font-mono font-semibold text-emerald-900">₹ {prePrintTweakCost} (5 mins)</span>
+                <span suppressHydrationWarning className="font-mono font-semibold text-emerald-900">
+                  ₹ {prePrintTweakCost} (5 mins)
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Engraving Cylinder Wastage:</span>
@@ -174,8 +192,8 @@ export default function FinancialRiskCalculator() {
             </div>
             <div className="pt-2 border-t border-emerald-200 flex justify-between items-baseline">
               <span className="font-bold text-emerald-950 text-xs">Net Capital Saved:</span>
-              <span className="font-mono font-extrabold text-base text-emerald-700">
-                ₹ {netCapitalSaved.toLocaleString()}
+              <span suppressHydrationWarning className="font-mono font-extrabold text-base text-emerald-700">
+                ₹ {formatNum(netCapitalSaved)}
               </span>
             </div>
           </div>
