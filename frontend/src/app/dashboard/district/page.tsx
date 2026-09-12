@@ -10,6 +10,7 @@ import {
   BarChart3,
   Siren,
   Radio,
+  Landmark,
 } from 'lucide-react';
 import { ApiClient } from '@/lib/api-client';
 
@@ -19,6 +20,8 @@ import LiveFeed from '@/components/dashboard/LiveFeed';
 import AnalyticsCards from '@/components/dashboard/AnalyticsCards';
 import NoticeApprovalModal from '@/components/dashboard/NoticeApprovalModal';
 import EnforcementSweepModal from '@/components/dashboard/EnforcementSweepModal';
+import PatrolRadarOverlay from '@/components/dashboard/PatrolRadarOverlay';
+import TreasuryLedgerView from '@/components/dashboard/TreasuryLedgerView';
 
 const LeafletMap = dynamic(() => import('@/components/Map'), {
   ssr: false,
@@ -34,7 +37,7 @@ export default function DistrictControllerDashboard() {
   const offenders = ApiClient.getRepeatOffenders();
 
   const [activeTab, setActiveTab] = useState<
-    'map' | 'notices' | 'offenders' | 'analytics'
+    'map' | 'notices' | 'offenders' | 'analytics' | 'treasury'
   >('map');
 
   // Filter state
@@ -234,6 +237,18 @@ export default function DistrictControllerDashboard() {
           <BarChart3 className="w-4 h-4" />
           <span>Analytics & Breakdown</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('treasury')}
+          className={`pb-3 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === 'treasury'
+              ? 'border-emerald-600 text-emerald-800'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          <Landmark className="w-4 h-4" />
+          <span>Treasury Recovery & Adjudication</span>
+        </button>
       </div>
 
       {/* Main Content Area with optional Live Feed sidebar */}
@@ -243,6 +258,9 @@ export default function DistrictControllerDashboard() {
           {/* TAB 1: GIS Violation Map */}
           {activeTab === 'map' && (
             <div className="space-y-4">
+              {/* Live Inspector Patrol Radar */}
+              <PatrolRadarOverlay />
+
               {/* Filter Bar */}
               <FilterBar onFilterChange={setFilters} />
 
@@ -434,6 +452,9 @@ export default function DistrictControllerDashboard() {
 
           {/* TAB 4: Analytics & Breakdown */}
           {activeTab === 'analytics' && <AnalyticsCards />}
+
+          {/* TAB 5: Treasury Recovery & Adjudication Ledger */}
+          {activeTab === 'treasury' && <TreasuryLedgerView />}
         </div>
 
         {/* Live Feed Sidebar */}
