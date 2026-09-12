@@ -370,7 +370,7 @@ export const SAMPLE_INSPECTIONS: InspectionRecord[] = [
     status: 'NON_COMPLIANT',
     complianceScore: 54,
     createdAt: '2026-09-07T16:20:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/samples/honey.jpg',
     tamperDetected: false,
     scanSource: 'ecomm_listing',
     declarations: [
