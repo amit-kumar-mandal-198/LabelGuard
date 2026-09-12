@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { canAccess } from '@/lib/route-guard';
+import InteractiveAiSandbox from '@/components/home/InteractiveAiSandbox';
+import StatutoryLifecycleStepper from '@/components/home/StatutoryLifecycleStepper';
 
 export default function Home() {
   const { user, isAuthenticated, login } = useAuth();
@@ -127,6 +129,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Interactive AI Inspection Sandbox (Real-time Demo) */}
+      <InteractiveAiSandbox />
+
+      {/* From Shelf to Prosecution: 4-Step Statutory Lifecycle Stepper */}
+      <StatutoryLifecycleStepper />
 
       {/* Personas / User Hierarchy Grid (from Main Users PDF) */}
       <section className="w-full max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 space-y-10">
