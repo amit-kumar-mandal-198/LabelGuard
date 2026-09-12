@@ -376,10 +376,7 @@ export default function EnforcementSweepModal({
                     max={18}
                     value={officerCount}
                     onChange={(e) => setOfficerCount(Number(e.target.value))}
-                    className="flex-1 h-2 rounded-full appearance-none cursor-pointer bg-slate-700 accent-cyan-500
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                      [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-400 [&::-webkit-slider-thumb]:border-2
-                      [&::-webkit-slider-thumb]:border-cyan-200 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-cyan-500/30"
+                    className="flex-1 h-2 rounded-full cursor-pointer bg-slate-700 accent-cyan-500"
                   />
                   <span className="text-xs text-slate-500 font-mono w-6">18</span>
                   <div className="ml-2 px-3 py-1.5 rounded-lg bg-cyan-950/50 border border-cyan-800/40">
@@ -500,7 +497,7 @@ export default function EnforcementSweepModal({
       </div>
 
       {/* Keyframe for sweep bar */}
-      <style jsx>{`
+      <style>{`
         @keyframes sweep {
           0% {
             width: 0%;

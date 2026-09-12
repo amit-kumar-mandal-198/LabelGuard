@@ -294,7 +294,7 @@ export default function LiveFeed() {
       )}
 
       {/* ── Inline keyframes ───────────────────────────────────── */}
-      <style jsx>{`
+      <style>{`
         @keyframes slideIn {
           0% {
             opacity: 0;
