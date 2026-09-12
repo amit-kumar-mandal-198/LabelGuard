@@ -2,6 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const LeafletMap = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-100 animate-pulse">Loading GIS Map...</div>
+});
+
 import {
   Scale,
   AlertTriangle,
@@ -141,60 +148,9 @@ export default function DistrictControllerDashboard() {
               </div>
             </div>
 
-            {/* Simulated Interactive Leaflet/GIS Map Container */}
-            <div className="relative h-64 sm:h-96 w-full rounded-xl bg-zinc-950 overflow-hidden border border-zinc-800 flex items-center justify-center">
-              {/* Map Graphic Backdrop */}
-              <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
-              {/* Street grid representation */}
-              <div className="absolute inset-0 flex flex-col justify-around pointer-events-none opacity-20">
-                <div className="h-px bg-zinc-600 w-full"></div>
-                <div className="h-px bg-zinc-600 w-full"></div>
-                <div className="h-px bg-zinc-600 w-full"></div>
-              </div>
-
-              {/* Heat Markers */}
-              {/* Hotspot 1: Kanpur Railway Road */}
-              <div className="absolute top-1/3 left-1/4 group cursor-pointer">
-                <div className="w-8 h-8 rounded-full bg-rose-600/40 animate-ping absolute -inset-0"></div>
-                <div className="relative w-8 h-8 rounded-full bg-rose-600 border-2 border-white flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                  !
-                </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white p-3 rounded-lg shadow-xl text-zinc-900 text-xs hidden group-hover:block z-20 border border-zinc-200 pointer-events-none">
-                  <p className="font-bold text-rose-700">Kanpur Railway Market</p>
-                  <p className="text-[11px] text-zinc-600">5 Dual-MRP Violations detected</p>
-                  <p className="text-[10px] text-zinc-400 mt-1 font-mono">Lat: 26.4499° N, Lng: 80.3319° E</p>
-                </div>
-              </div>
-
-              {/* Hotspot 2: Sector 18 Noida */}
-              <div className="absolute top-1/2 left-2/3 group cursor-pointer">
-                <div className="relative w-7 h-7 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                  ✓
-                </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white p-3 rounded-lg shadow-xl text-zinc-900 text-xs hidden group-hover:block z-20 border border-zinc-200 pointer-events-none">
-                  <p className="font-bold text-emerald-700">Sector 18 Superstore Hub</p>
-                  <p className="text-[11px] text-zinc-600">98% Compliance Rate (48 scans)</p>
-                  <p className="text-[10px] text-zinc-400 mt-1 font-mono">Lat: 28.5708° N, Lng: 77.3261° E</p>
-                </div>
-              </div>
-
-              {/* Hotspot 3: Central Delhi */}
-              <div className="absolute top-1/4 right-1/3 group cursor-pointer">
-                <div className="w-6 h-6 rounded-full bg-amber-500/40 animate-ping absolute -inset-0"></div>
-                <div className="relative w-6 h-6 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center text-white font-bold text-xs shadow-lg">
-                  !
-                </div>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-white p-3 rounded-lg shadow-xl text-zinc-900 text-xs hidden group-hover:block z-20 border border-zinc-200 pointer-events-none">
-                  <p className="font-bold text-amber-700">Connaught Place Trade Hub</p>
-                  <p className="text-[11px] text-zinc-600">Rule 9(6) Font Height Violations</p>
-                  <p className="text-[10px] text-zinc-400 mt-1 font-mono">Lat: 28.6315° N, Lng: 77.2167° E</p>
-                </div>
-              </div>
-
-              <div className="absolute bottom-3 left-3 bg-zinc-900/80 backdrop-blur-xs text-zinc-300 text-[10px] px-3 py-1.5 rounded-lg border border-zinc-800">
-                Leaflet / GPS Ingestion Engine • Real-Time Spatial Clustering Active
-              </div>
+            {/* Real Interactive Leaflet/GIS Map Container */}
+            <div className="relative h-64 sm:h-96 w-full rounded-xl overflow-hidden border border-zinc-200 shadow-sm z-0">
+              <LeafletMap />
             </div>
           </div>
         </div>
