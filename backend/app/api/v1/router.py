@@ -8,6 +8,8 @@ from app.api.v1.endpoints import (
     products,
     barcodes,
     manufacturer_references,
+    analysis,
+    compliance,
 )
 
 
@@ -41,4 +43,12 @@ api_router.include_router(
 
 api_router.include_router(
     manufacturer_references.router,
+)
+
+api_router.include_router(
+    analysis.router,
+)
+
+api_router.include_router(
+    compliance.router,
 )

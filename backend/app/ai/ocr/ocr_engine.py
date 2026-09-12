@@ -6,18 +6,16 @@ import cv2
 import pytesseract
 
 
+import shutil
+
 TESSERACT_PATH = Path(
     r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 )
 
-if not TESSERACT_PATH.exists():
-    raise FileNotFoundError(
-        f"Tesseract executable not found: {TESSERACT_PATH}"
-    )
-
-pytesseract.pytesseract.tesseract_cmd = str(
-    TESSERACT_PATH
-)
+if TESSERACT_PATH.exists():
+    pytesseract.pytesseract.tesseract_cmd = str(TESSERACT_PATH)
+elif shutil.which("tesseract"):
+    pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract")
 
 
 DEFAULT_PSMS = (6, 11, 12)

@@ -9,11 +9,11 @@ class Settings(BaseSettings):
     debug: bool = True
 
     api_v1_prefix: str = "/api/v1"
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "*"
 
-    database_url: str
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/labelguard"
 
-    jwt_secret_key: str
+    jwt_secret_key: str = "labelguard-super-secret-jwt-key-2026"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
 

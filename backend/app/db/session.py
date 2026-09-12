@@ -9,7 +9,7 @@ engine = create_engine(
     pool_pre_ping=True,
     connect_args={
         "options": "-c client_encoding=UTF8",
-    },
+    } if "postgresql" in settings.database_url else {},
 )
 
 SessionLocal = sessionmaker(
