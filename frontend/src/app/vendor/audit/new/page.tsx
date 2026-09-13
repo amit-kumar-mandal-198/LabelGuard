@@ -101,15 +101,27 @@ export default function NewSelfAuditPage() {
       const timer4 = setTimeout(() => setProcessingStage(4), 2400);
       const timer5 = setTimeout(() => {
         setProcessingStage(5);
-        // Load target inspection result
-        ApiClient.simulateAudit({
-          productName,
-          brand,
-          sku,
-          declaredMrp,
-          category,
-          file: selectedFile,
-        }).then((data) => {
+        // If user uploaded a physical artwork / packaging file, run live Gemini Vision AI scan
+        const scanPromise = selectedFile
+          ? ApiClient.quickScan({
+              file: selectedFile,
+              productName,
+              brand,
+              sku,
+              declaredMrp,
+              category,
+              scanSource: 'vendor_self_audit',
+            })
+          : ApiClient.simulateAudit({
+              productName,
+              brand,
+              sku,
+              declaredMrp,
+              category,
+              file: selectedFile,
+            });
+
+        scanPromise.then((data) => {
           setResult(data);
           setStep(4);
         });
