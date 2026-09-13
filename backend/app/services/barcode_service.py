@@ -478,6 +478,160 @@ class BarcodeService:
 barcode_service = BarcodeService()
 
 
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class BarcodeEvaluationResult:
+    barcode: str
+    barcode_type: str  # 'EAN-13', 'UPC-A', 'Unknown'
+    is_valid_checksum: bool
+    calculated_check_digit: Optional[int]
+    actual_check_digit: Optional[int]
+    gs1_prefix: str
+    country_of_origin: str
+    is_domestic_india: bool
+    is_country_consistent: bool
+    violation_code: Optional[str] = None
+    violation_message: Optional[str] = None
+
+
+GS1_PREFIX_RANGES = [
+    (0, 19, "United States & Canada"),
+    (30, 39, "United States & Canada"),
+    (60, 139, "United States & Canada"),
+    (300, 379, "France"),
+    (400, 440, "Germany"),
+    (450, 459, "Japan"),
+    (490, 499, "Japan"),
+    (460, 469, "Russia"),
+    (500, 509, "United Kingdom"),
+    (590, 590, "Poland"),
+    (600, 601, "South Africa"),
+    (690, 699, "China"),
+    (730, 739, "Sweden"),
+    (760, 769, "Switzerland"),
+    (800, 839, "Italy"),
+    (840, 849, "Spain"),
+    (870, 879, "Netherlands"),
+    (880, 880, "South Korea"),
+    (885, 885, "Thailand"),
+    (888, 888, "Singapore"),
+    (890, 890, "India"),
+    (893, 893, "Vietnam"),
+    (899, 899, "Indonesia"),
+    (900, 919, "Austria"),
+    (930, 939, "Australia"),
+    (940, 949, "New Zealand"),
+]
+
+
+def lookup_gs1_country(prefix_str: str) -> str:
+    try:
+        if len(prefix_str) >= 3:
+            p3 = int(prefix_str[:3])
+            for start, end, cname in GS1_PREFIX_RANGES:
+                if start <= p3 <= end:
+                    return cname
+
+        p2 = int(prefix_str[:2])
+        for start, end, cname in GS1_PREFIX_RANGES:
+            if start <= p2 <= end:
+                return cname
+    except (ValueError, TypeError):
+        pass
+    return "International / Unassigned"
+
+
+def compute_ean13_checksum(digits12: str) -> int:
+    total = 0
+    for idx, char in enumerate(digits12):
+        weight = 1 if idx % 2 == 0 else 3
+        total += int(char) * weight
+    return (10 - (total % 10)) % 10
+
+
+def evaluate_barcode(
+    barcode_raw: str,
+    declared_country_of_origin: Optional[str] = None,
+) -> BarcodeEvaluationResult:
+    if not barcode_raw:
+        return BarcodeEvaluationResult(
+            barcode="",
+            barcode_type="None",
+            is_valid_checksum=False,
+            calculated_check_digit=None,
+            actual_check_digit=None,
+            gs1_prefix="",
+            country_of_origin="Unknown",
+            is_domestic_india=False,
+            is_country_consistent=True,
+            violation_code=None,
+            violation_message=None,
+        )
+
+    digits = re.sub(r"\D", "", barcode_raw)
+    if len(digits) == 12:
+        digits = "0" + digits
+
+    if len(digits) != 13:
+        return BarcodeEvaluationResult(
+            barcode=barcode_raw,
+            barcode_type="Invalid Length",
+            is_valid_checksum=False,
+            calculated_check_digit=None,
+            actual_check_digit=None,
+            gs1_prefix="",
+            country_of_origin="Unknown",
+            is_domestic_india=False,
+            is_country_consistent=False,
+            violation_code="INVALID_BARCODE_LENGTH",
+            violation_message=f"Barcode '{barcode_raw}' does not conform to EAN-13 / UPC standard (expected 12 or 13 digits, found {len(digits)}).",
+        )
+
+    actual_check = int(digits[-1])
+    calculated_check = compute_ean13_checksum(digits[:12])
+    is_valid = actual_check == calculated_check
+
+    prefix = digits[:3]
+    country = lookup_gs1_country(prefix)
+    is_india = prefix == "890"
+
+    is_consistent = True
+    v_code = None
+    v_msg = None
+
+    if not is_valid:
+        v_code = "BARCODE_CHECKSUM_FAILURE"
+        v_msg = f"EAN-13 Check digit mismatch for barcode '{digits}'. Expected check digit {calculated_check}, found {actual_check} (potential counterfeit packaging)."
+    elif declared_country_of_origin:
+        decl_clean = declared_country_of_origin.strip().lower()
+        if "india" in decl_clean and not is_india and country not in ("International / Unassigned", "Unknown"):
+            is_consistent = False
+            v_code = "BARCODE_COUNTRY_MISMATCH"
+            v_msg = f"Packaging declares Country of Origin as '{declared_country_of_origin}', but GS1 barcode prefix '{prefix}' is allocated to '{country}'."
+        elif "india" not in decl_clean and is_india:
+            is_consistent = False
+            v_code = "BARCODE_IMPORTER_MISMATCH"
+            v_msg = f"Packaging claims foreign origin '{declared_country_of_origin}', but barcode carries Indian GS1 prefix '890' without declared co-packer/importer registration."
+
+    return BarcodeEvaluationResult(
+        barcode=digits,
+        barcode_type="EAN-13",
+        is_valid_checksum=is_valid,
+        calculated_check_digit=calculated_check,
+        actual_check_digit=actual_check,
+        gs1_prefix=prefix,
+        country_of_origin=country,
+        is_domestic_india=is_india,
+        is_country_consistent=is_consistent,
+        violation_code=v_code,
+        violation_message=v_msg,
+    )
+
+
+
 
 
 

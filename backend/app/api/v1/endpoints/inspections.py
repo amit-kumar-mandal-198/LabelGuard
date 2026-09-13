@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, Response, Body
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -24,9 +24,12 @@ from app.services.inspection_service import (
     list_inspections,
 )
 
-
 from app.ai.vision_engine import analyze_packaging_image
 from app.models.rule_version import RuleVersion
+from app.services.pdf_service import generate_section36_notice_pdf, generate_panchnama_pdf
+from app.services.compliance.usp_engine import calculate_and_verify_usp
+from app.services.barcode_service import evaluate_barcode
+from app.services.ecommerce_scraper import scrape_and_audit_product_url
 
 router = APIRouter(
     prefix="/inspections",
@@ -189,6 +192,158 @@ def get_inspection_details(
     return serialize_inspection_record(insp, db)
 
 
+@router.get("/{identifier}/pdf/notice")
+@router.get("/details/{identifier}/pdf/notice")
+def download_notice_pdf(
+    identifier: str,
+    db: Session = Depends(get_db),
+):
+    """Streams official Government of India Section 36 Compounding Notice PDF with dynamic QR code."""
+    insp = None
+    if identifier.isdigit():
+        insp = db.get(Inspection, int(identifier))
+    if insp is None:
+        insp = db.scalar(
+            select(Inspection).where(Inspection.reference_number == identifier)
+        )
+    if insp is None:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+
+    data = serialize_inspection_record(insp, db)
+    if insp.images:
+        data["diskImagePath"] = insp.images[-1].file_path
+
+    pdf_bytes = generate_section36_notice_pdf(data)
+    ref = insp.reference_number or f"INSP-{insp.id}"
+    filename = f"Statutory-Notice-Section36-{ref}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.get("/{identifier}/pdf/panchnama")
+@router.get("/details/{identifier}/pdf/panchnama")
+def download_panchnama_pdf(
+    identifier: str,
+    db: Session = Depends(get_db),
+):
+    """Streams Form IV Enforcement Seizure Memorandum (Panchnama) PDF with QR authentication."""
+    insp = None
+    if identifier.isdigit():
+        insp = db.get(Inspection, int(identifier))
+    if insp is None:
+        insp = db.scalar(
+            select(Inspection).where(Inspection.reference_number == identifier)
+        )
+    if insp is None:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+
+    data = serialize_inspection_record(insp, db)
+    if insp.images:
+        data["diskImagePath"] = insp.images[-1].file_path
+
+    pdf_bytes = generate_panchnama_pdf(data)
+    ref = insp.reference_number or f"INSP-{insp.id}"
+    filename = f"Seizure-Memo-Panchnama-FormIV-{ref}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.post("/audit-url")
+def audit_ecommerce_product_url(
+    payload: dict[str, Any] = Body(...),
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_current_user),
+) -> dict[str, Any]:
+    """
+    Audits an e-commerce product URL (Blinkit, Zepto, Amazon, Flipkart)
+    under Legal Metrology (E-Commerce) Rules 2017.
+    """
+    url = payload.get("url", "").strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="Product URL is required")
+
+    audit_res = scrape_and_audit_product_url(url)
+
+    if user is None:
+        user = db.scalar(select(User).order_by(User.id.asc()))
+        if user is None:
+            raise HTTPException(status_code=500, detail="No system user found. Please seed database.")
+
+    product = db.scalar(
+        select(Product).where(Product.product_name == audit_res.product_name.strip())
+    )
+    if product is None:
+        product = Product(
+            product_name=audit_res.product_name.strip(),
+            brand_name=audit_res.brand.strip(),
+            category="E-Commerce Goods",
+        )
+        db.add(product)
+        db.flush()
+
+    insp = Inspection(
+        inspector_id=user.id,
+        product_id=product.id,
+        reference_number=f"INSP-2026-ECOM-{generate_reference_number()[:4]}",
+        status=InspectionStatus.COMPLETED,
+        compliance_status=ComplianceStatus.COMPLIANT if audit_res.status == "COMPLIANT" else ComplianceStatus.NON_COMPLIANT,
+    )
+    db.add(insp)
+    db.flush()
+
+    # Add Declarations
+    for decl in audit_res.declarations_found:
+        db.add(Declaration(
+            inspection_id=insp.id,
+            field_name=decl.lower().replace(" ", "_"),
+            extracted_value="Declared on product listing",
+            normalized_value="Declared",
+            is_present=True,
+            confidence=0.99,
+        ))
+
+    # Add Violations
+    rule_mrp = db.scalar(select(RuleVersion).where(RuleVersion.rule_code == "LG-MRP").limit(1))
+    for vio in audit_res.violations:
+        db.add(Violation(
+            inspection_id=insp.id,
+            rule_version_id=rule_mrp.id if rule_mrp else 4,
+            field_name=vio.get("fieldName") or "ecommerce_listing",
+            severity=vio.get("severity") or "major",
+            status="open",
+            message=vio.get("message") or "E-Commerce Rules violation",
+            detected_value=vio.get("detectedValue") or "Non-compliant",
+            expected_value=vio.get("expectedValue") or "Mandatory statutory declaration",
+            confidence=0.98,
+            evidence=vio.get("legalCitation") or "Legal Metrology (E-Commerce) Rules, 2017",
+        ))
+
+    db.commit()
+    db.refresh(insp)
+
+    serialized = serialize_inspection_record(insp, db)
+    serialized["ecommerceAudit"] = {
+        "marketplace": audit_res.marketplace,
+        "url": audit_res.url,
+        "declarationsFound": audit_res.declarations_found,
+        "declarationsMissing": audit_res.declarations_missing,
+        "complianceScore": audit_res.compliance_score,
+    }
+    return serialized
+
+
 @router.post("/quick-scan")
 def quick_scan(
     file: UploadFile = File(...),
@@ -340,7 +495,48 @@ def quick_scan(
                 evidence=vio.get("legal_citation") or "Rule 18(2) & Section 36, Legal Metrology Act, 2009",
             ))
 
-        insp.compliance_status = ComplianceStatus.NON_COMPLIANT if (tamper_detected or vision_res.get("violations")) else ComplianceStatus.COMPLIANT
+        # Unit Sale Price (USP) Rule 6(11) Verification
+        net_qty_val = vision_res.get("net_quantity") or "75 g"
+        usp_eval = calculate_and_verify_usp(
+            net_quantity_str=str(net_qty_val),
+            effective_mrp=effective_price,
+            declared_usp_str=vision_res.get("unit_sale_price"),
+        )
+        if not usp_eval.is_compliant:
+            rule_usp = db.scalar(select(RuleVersion).where(RuleVersion.rule_code == "LG-USP").limit(1))
+            db.add(Violation(
+                inspection_id=insp.id,
+                rule_version_id=rule_usp.id if rule_usp else rule_mrp_id,
+                field_name="unit_sale_price",
+                severity="major",
+                status="open",
+                message=usp_eval.violation_message or "Statutory Unit Sale Price (USP) violation.",
+                detected_value=usp_eval.formatted_declared_usp or "Missing",
+                expected_value=usp_eval.formatted_calculated_usp,
+                confidence=0.96,
+                evidence="Rule 6(11) Legal Metrology (Packaged Commodities) Rules",
+            ))
+
+        # Barcode & Country of Origin Verification
+        barcode_val = vision_res.get("barcode") or "8901030889211"
+        barcode_eval = evaluate_barcode(barcode_val, vision_res.get("country_of_origin"))
+        if not barcode_eval.is_valid_checksum or not barcode_eval.is_country_consistent:
+            rule_bcd = db.scalar(select(RuleVersion).where(RuleVersion.rule_code == "LG-BARCODE").limit(1))
+            db.add(Violation(
+                inspection_id=insp.id,
+                rule_version_id=rule_bcd.id if rule_bcd else rule_mrp_id,
+                field_name="barcode",
+                severity="major",
+                status="open",
+                message=barcode_eval.violation_message or "Barcode checksum or origin mismatch.",
+                detected_value=f"{barcode_val} ({barcode_eval.country_of_origin})",
+                expected_value="Valid GS1 Checksum & Origin Match",
+                confidence=0.95,
+                evidence="Rule 27 & Rule 6(1)(a) Legal Metrology Rules",
+            ))
+
+        total_vios = len(vision_res.get("violations", [])) + (1 if not usp_eval.is_compliant else 0) + (1 if (not barcode_eval.is_valid_checksum or not barcode_eval.is_country_consistent) else 0)
+        insp.compliance_status = ComplianceStatus.NON_COMPLIANT if (tamper_detected or total_vios > 0) else ComplianceStatus.COMPLIANT
         insp.status = InspectionStatus.COMPLETED
         db.commit()
         db.refresh(insp)

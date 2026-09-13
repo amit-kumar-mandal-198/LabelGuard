@@ -260,6 +260,80 @@ export class ApiClient {
     });
   }
 
+  static async downloadNoticePdf(id: string | number): Promise<void> {
+    try {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/inspections/details/${id}/pdf/notice`);
+      if (!res.ok) throw new Error('Failed to generate Notice PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Statutory-Notice-Section36-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('PDF download error:', e);
+      alert('Could not download Section 36 Notice PDF. Please ensure backend server is reachable.');
+    }
+  }
+
+  static async downloadPanchnamaPdf(id: string | number): Promise<void> {
+    try {
+      const apiBase = getApiBase();
+      const res = await fetch(`${apiBase}/inspections/details/${id}/pdf/panchnama`);
+      if (!res.ok) throw new Error('Failed to generate Panchnama PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Seizure-Memo-Panchnama-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('PDF download error:', e);
+      alert('Could not download Panchnama PDF. Please ensure backend server is reachable.');
+    }
+  }
+
+  static async fetchDistrictAnalytics(district?: string): Promise<any> {
+    try {
+      const apiBase = getApiBase();
+      const query = district ? `?district=${encodeURIComponent(district)}` : '';
+      const res = await fetch(`${apiBase}/analytics/district-summary${query}`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Could not fetch district analytics, using fallback:', e);
+    }
+    return null;
+  }
+
+  static async auditEcommerceUrl(url: string): Promise<InspectionRecord & { ecommerceAudit?: any }> {
+    const apiBase = getApiBase();
+    const res = await fetch(`${apiBase}/inspections/audit-url`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) {
+      throw new Error('E-Commerce audit failed');
+    }
+    const data = await res.json();
+    this.cachedInspections.unshift(data);
+    return data;
+  }
+
   static async simulateAudit(payload: {
     productName: string;
     brand: string;

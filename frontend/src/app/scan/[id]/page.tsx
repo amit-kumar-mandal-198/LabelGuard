@@ -61,13 +61,20 @@ export default function ScanDetailPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
-            onClick={() => alert(`Enforcement-grade PDF report generated deterministically in 340ms.`)}
-            className="px-4 py-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition"
+            onClick={() => ApiClient.downloadNoticePdf(scan.id)}
+            className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition"
           >
-            <Download className="w-4 h-4 text-zinc-600" />
-            <span>Download Legal Evidence Report (PDF)</span>
+            <Download className="w-3.5 h-3.5 text-rose-600" />
+            <span>Section 36 Notice (PDF)</span>
+          </button>
+          <button
+            onClick={() => ApiClient.downloadPanchnamaPdf(scan.id)}
+            className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition"
+          >
+            <Download className="w-3.5 h-3.5 text-zinc-300" />
+            <span>Form IV Panchnama (PDF)</span>
           </button>
         </div>
       </div>

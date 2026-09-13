@@ -64,6 +64,26 @@ export default function NewSelfAuditPage() {
   const [isZoomed, setIsZoomed] = useState(false);
   const [copiedHash, setCopiedHash] = useState(false);
 
+  // E-Commerce Audit Mode State
+  const [auditMode, setAuditMode] = useState<'artwork' | 'ecommerce'>('artwork');
+  const [ecommerceUrl, setEcommerceUrl] = useState('https://www.blinkit.com/prn/nutririch-digestive-biscuits-500g');
+  const [isAuditingUrl, setIsAuditingUrl] = useState(false);
+
+  const handleAuditEcommerceUrl = async (targetUrl?: string) => {
+    const urlToTest = targetUrl || ecommerceUrl;
+    setIsAuditingUrl(true);
+    try {
+      const data = await ApiClient.auditEcommerceUrl(urlToTest);
+      setResult(data);
+      setStep(4);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to audit E-Commerce URL. Please verify server connection.');
+    } finally {
+      setIsAuditingUrl(false);
+    }
+  };
+
   // Handle Preset Quick Selection
   const applyPreset = (type: 'compliant' | 'font_defect' | 'tampered_mrp') => {
     setPresetType(type);
@@ -195,6 +215,122 @@ export default function NewSelfAuditPage() {
             </p>
           </div>
 
+          {/* Audit Mode Switcher */}
+          <div className="flex border-b border-zinc-200 pb-2 gap-4">
+            <button
+              type="button"
+              onClick={() => setAuditMode('artwork')}
+              className={`text-xs font-bold pb-2 border-b-2 transition flex items-center gap-1.5 ${
+                auditMode === 'artwork'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-800'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Physical Packaging Artwork Upload</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuditMode('ecommerce')}
+              className={`text-xs font-bold pb-2 border-b-2 transition flex items-center gap-1.5 ${
+                auditMode === 'ecommerce'
+                  ? 'border-blue-600 text-blue-700'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-800'
+              }`}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Live E-Commerce URL Audit (Blinkit / Zepto / Amazon)</span>
+            </button>
+          </div>
+
+          {auditMode === 'ecommerce' ? (
+            <div className="bg-blue-50/50 border border-blue-200 rounded-xl p-5 space-y-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-blue-950 flex items-center gap-1.5">
+                    <ExternalLink className="w-4 h-4 text-blue-600" />
+                    Legal Metrology (E-Commerce) Rules 2017 Live Auditor
+                  </h3>
+                  <p className="text-xs text-blue-800/80 mt-0.5">
+                    Paste any live product page URL to audit mandatory pre-purchase declarations: Country of Origin,
+                    Manufacturer, Unit Sale Price (USP), and Best Before timelines.
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-200 text-blue-900 font-bold uppercase">
+                  Rule 6(10) Automated
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-800">E-Commerce Product URL</label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={ecommerceUrl}
+                    onChange={(e) => setEcommerceUrl(e.target.value)}
+                    placeholder="https://www.blinkit.com/prn/product-name or amazon.in/dp/..."
+                    className="flex-1 p-2.5 rounded-lg border border-zinc-300 focus:ring-2 focus:ring-blue-500 font-mono text-xs bg-white"
+                  />
+                  <button
+                    type="button"
+                    disabled={isAuditingUrl || !ecommerceUrl}
+                    onClick={() => handleAuditEcommerceUrl()}
+                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-sm transition"
+                  >
+                    {isAuditingUrl ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Scraping & Auditing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Audit Live URL</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Presets for Judges */}
+              <div className="space-y-1.5 pt-2 border-t border-blue-200/60">
+                <span className="text-[11px] font-bold text-blue-900">Judge Quick-Test Presets:</span>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEcommerceUrl('https://www.blinkit.com/prn/nutririch-digestive-biscuits-500g');
+                      handleAuditEcommerceUrl('https://www.blinkit.com/prn/nutririch-digestive-biscuits-500g');
+                    }}
+                    className="px-3 py-1.5 bg-white border border-blue-300 hover:bg-blue-100/50 rounded-lg text-blue-800 font-semibold text-[11px] transition shadow-2xs"
+                  >
+                    🛒 Blinkit: Digestive Biscuits 500g
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEcommerceUrl('https://www.zeptonow.com/pn/golden-pure-sunflower-oil-1l');
+                      handleAuditEcommerceUrl('https://www.zeptonow.com/pn/golden-pure-sunflower-oil-1l');
+                    }}
+                    className="px-3 py-1.5 bg-white border border-blue-300 hover:bg-blue-100/50 rounded-lg text-blue-800 font-semibold text-[11px] transition shadow-2xs"
+                  >
+                    ⚡ Zepto: Refined Sunflower Oil 1L
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEcommerceUrl('https://www.amazon.in/dp/B08XYZ1234-procare-cream-100ml');
+                      handleAuditEcommerceUrl('https://www.amazon.in/dp/B08XYZ1234-procare-cream-100ml');
+                    }}
+                    className="px-3 py-1.5 bg-white border border-rose-300 bg-rose-50/50 hover:bg-rose-100/50 rounded-lg text-rose-800 font-semibold text-[11px] transition shadow-2xs"
+                  >
+                    ⚠️ Amazon: Imported Cosmetic (Missing Origin)
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Reference Packaging Samples */}
           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 space-y-2">
             <p className="text-xs font-bold text-zinc-700 uppercase tracking-wide flex items-center gap-1.5">
@@ -322,6 +458,8 @@ export default function NewSelfAuditPage() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+            </>
+          )}
         </div>
       )}
 

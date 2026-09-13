@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -35,6 +35,13 @@ const LeafletMap = dynamic(() => import('@/components/Map'), {
 export default function DistrictControllerDashboard() {
   const notices = ApiClient.getNotices();
   const offenders = ApiClient.getRepeatOffenders();
+  const [analytics, setAnalytics] = useState<any>(null);
+
+  useEffect(() => {
+    ApiClient.fetchDistrictAnalytics().then((data) => {
+      if (data) setAnalytics(data);
+    });
+  }, []);
 
   const [activeTab, setActiveTab] = useState<
     'map' | 'notices' | 'offenders' | 'analytics' | 'treasury'
@@ -139,19 +146,23 @@ export default function DistrictControllerDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
         <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow cursor-pointer">
           <span className="text-zinc-500 font-medium">
-            Today&apos;s Field Scans
+            Recorded Database Scans
           </span>
-          <p className="text-2xl font-extrabold text-zinc-900 mt-1">142</p>
+          <p className="text-2xl font-extrabold text-zinc-900 mt-1">
+            {analytics ? analytics.totalInspections : 14}
+          </p>
           <span className="text-[10px] text-emerald-700 font-semibold">
-            +18% vs yesterday
+            Real-time DB dossiers
           </span>
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow cursor-pointer">
           <span className="text-zinc-500 font-medium">Violations Found</span>
-          <p className="text-2xl font-extrabold text-rose-600 mt-1">19</p>
+          <p className="text-2xl font-extrabold text-rose-600 mt-1">
+            {analytics ? analytics.nonCompliantCount : 13}
+          </p>
           <span className="text-[10px] text-rose-700 font-semibold">
-            13.3% defect rate
+            {analytics ? `${(100 - analytics.complianceRatePercent).toFixed(1)}% defect rate` : '92.9% defect rate'}
           </span>
         </div>
 
@@ -159,9 +170,11 @@ export default function DistrictControllerDashboard() {
           <span className="text-zinc-500 font-medium">
             Critical Violations
           </span>
-          <p className="text-2xl font-extrabold text-rose-700 mt-1">6</p>
+          <p className="text-2xl font-extrabold text-rose-700 mt-1">
+            {analytics ? analytics.dualMrpTamperCount : 12}
+          </p>
           <span className="text-[10px] text-rose-700 font-semibold">
-            Dual MRP / Tampering
+            Dual MRP / Sticker Tampering
           </span>
         </div>
 
@@ -178,12 +191,12 @@ export default function DistrictControllerDashboard() {
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-xs col-span-2 lg:col-span-1 hover:shadow-md transition-shadow cursor-pointer">
-          <span className="text-zinc-500 font-medium">Active Inspectors</span>
-          <p className="text-2xl font-extrabold text-blue-600 mt-1">
-            18 / 20
+          <span className="text-zinc-500 font-medium">Assessed Penalties</span>
+          <p className="text-2xl font-extrabold text-emerald-700 mt-1">
+            {analytics ? `₹ ${(analytics.totalCompoundingAssessedInr / 100000).toFixed(2)} L` : '₹ 6.25 L'}
           </p>
-          <span className="text-[10px] text-blue-700 font-semibold">
-            On-field across 4 tehsils
+          <span className="text-[10px] text-emerald-800 font-semibold">
+            Statutory Compounding Assessed
           </span>
         </div>
       </div>

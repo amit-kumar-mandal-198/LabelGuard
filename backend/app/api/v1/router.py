@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     manufacturer_references,
     analysis,
     compliance,
+    analytics,
 )
 
 
@@ -55,4 +56,10 @@ api_router.include_router(
 
 api_router.include_router(
     compliance.compliance_router,
+)
+
+api_router.include_router(
+    analytics.router,
+    prefix="/analytics",
+    tags=["Analytics"],
 )
