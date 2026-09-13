@@ -18,26 +18,13 @@ export const getApiBase = (): string => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  if (typeof window !== 'undefined' && window.location?.hostname) {
-    const protocol = window.location.protocol || 'http:';
-    const host = window.location.hostname;
-    return `${protocol}//${host}:8000/api/v1`;
-  }
-  return 'http://localhost:8000/api/v1';
+  return '/api/v1';
 };
 
 export const resolveImageUrl = (url?: string | null): string => {
   if (!url) return '/samples/biscuits.jpg';
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/storage/')) {
-    if (typeof window !== 'undefined' && window.location?.hostname) {
-      const protocol = window.location.protocol || 'http:';
-      const host = window.location.hostname;
-      return `${protocol}//${host}:8000${url}`;
-    }
-    return `http://localhost:8000${url}`;
-  }
   return url;
 };
 
