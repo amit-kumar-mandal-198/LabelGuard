@@ -114,6 +114,7 @@ export default function InspectorScansPage() {
       barcode: item.barcode,
       declaredMrp: 35.0,
       netQuantity: '45 g',
+      mfgMonthYear: '08/2026',
       storeName: item.retailer,
       location: item.location,
       gpsCoords: { lat: 28.5708, lng: 77.3261 },
@@ -123,7 +124,19 @@ export default function InspectorScansPage() {
       imageUrl: item.image,
       tamperDetected: item.status !== 'compliant',
       scanSource: 'field_inspector',
-      violations: item.status !== 'compliant' ? [item.defectReason] : [],
+      violations: item.status !== 'compliant' ? [{
+        id: `VIO-${index + 1}`,
+        ruleCode: 'LG-DEFECT',
+        ruleTitle: 'Packaging Non-Compliance',
+        legalCitation: 'Rule 6, Legal Metrology (PC) Rules 2011',
+        fieldName: 'declaration',
+        severity: 'major',
+        status: 'open',
+        message: item.defectReason || 'Packaging non-compliance identified during sweep',
+        detectedValue: null,
+        expectedValue: 'Compliant format',
+        fixSuggestion: 'Rectify packaging declaration',
+      }] : [],
       declarations: []
     }));
 

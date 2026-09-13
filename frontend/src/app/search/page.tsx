@@ -222,7 +222,7 @@ export default function UniversalSearchPage() {
                       <span>{item.barcode || 'Verified'}</span>
                       {item.barcode && (
                         <button
-                          onClick={() => handleCopyBarcode(item.barcode)}
+                          onClick={() => handleCopyBarcode(item.barcode!)}
                           className="hover:text-zinc-700 transition"
                           title="Copy barcode"
                         >

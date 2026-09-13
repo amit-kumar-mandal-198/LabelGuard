@@ -52,3 +52,7 @@ api_router.include_router(
 api_router.include_router(
     compliance.router,
 )
+
+api_router.include_router(
+    compliance.compliance_router,
+)

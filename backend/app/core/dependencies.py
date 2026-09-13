@@ -57,3 +57,26 @@ def require_roles(*allowed_roles: str) -> Callable:
         return current_user
 
     return role_checker
+
+
+optional_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    if not credentials:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        user = db.get(User, int(user_id))
+        if user and user.is_active:
+            return user
+        return None
+    except Exception:
+        return None
+

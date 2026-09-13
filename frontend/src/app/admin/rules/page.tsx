@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layers,
   PlusCircle,
@@ -16,6 +16,11 @@ import { CodifiedRule } from '@/lib/types';
 
 export default function CodifiedRulesManager() {
   const [rules, setRules] = useState<CodifiedRule[]>(ApiClient.getRules());
+
+  useEffect(() => {
+    ApiClient.fetchRules().then(setRules);
+  }, []);
+
   const [showAddModal, setShowAddModal] = useState(false);
 
   // New Rule Form

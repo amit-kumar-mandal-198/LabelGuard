@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -23,7 +23,13 @@ import { BoundingBox } from '@/lib/types';
 export default function ScanDetailPage() {
   const params = useParams();
   const id = (params?.id as string) || 'INSP-2026-001';
-  const scan = ApiClient.getInspectionById(id) || ApiClient.getInspections()[0];
+  const [scan, setScan] = useState(ApiClient.getInspectionById(id) || ApiClient.getInspections()[0]);
+
+  useEffect(() => {
+    ApiClient.fetchInspectionById(id).then((data) => {
+      if (data) setScan(data);
+    });
+  }, [id]);
 
   const [selectedBbox, setSelectedBbox] = useState<BoundingBox | null>(null);
 

@@ -32,7 +32,7 @@ export default function OfficialCertificateModal({
 
   if (!isOpen || !record) return null;
 
-  const certNumber = `LM-CERT-${new Date().getFullYear()}-${record.id.replace(/\D/g, '') || '88391'}`;
+  const certNumber = `LM-CERT-${new Date().getFullYear()}-${String(record.id).replace(/\D/g, '') || '88391'}`;
   const shaHash = `4a8b7192ce908bf21b7904e578fa1b490f2098234ea720b08a1c9df03194db90e`;
 
   const handleCopyHash = () => {

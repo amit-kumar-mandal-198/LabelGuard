@@ -4,12 +4,16 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from app.core.config import settings
 
 
+connect_args = {}
+if "postgresql" in settings.database_url:
+    connect_args = {"options": "-c client_encoding=UTF8"}
+elif "sqlite" in settings.database_url:
+    connect_args = {"check_same_thread": False}
+
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
-    connect_args={
-        "options": "-c client_encoding=UTF8",
-    } if "postgresql" in settings.database_url else {},
+    connect_args=connect_args,
 )
 
 SessionLocal = sessionmaker(

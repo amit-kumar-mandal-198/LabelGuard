@@ -60,7 +60,7 @@ export default function ArtworkRemediationDrawer({
     setIsApplying(true);
     setTimeout(() => {
       setIsApplying(false);
-      onApplyRemediation(record.id);
+      onApplyRemediation(String(record.id));
       onClose();
     }, 1000);
   };
@@ -123,7 +123,7 @@ export default function ArtworkRemediationDrawer({
             {record.violations.map((v, i) => (
               <div key={i} className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-rose-900 font-mono text-[11px]">{v.ruleCitation || v.ruleCode}</span>
+                  <span className="font-bold text-rose-900 font-mono text-[11px]">{v.legalCitation || v.ruleCode}</span>
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-200 text-rose-800 uppercase">
                     {v.severity}
                   </span>

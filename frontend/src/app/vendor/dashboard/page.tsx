@@ -63,6 +63,7 @@ export default function VendorDashboard() {
       barcode: item.barcode,
       declaredMrp: 65.0,
       netQuantity: '250 g',
+      mfgMonthYear: '08/2026',
       storeName: 'Pre-Print Plate Engraving Lab',
       location: 'Ecotech III Plant, Greater Noida',
       status: item.readinessScore >= 90 ? 'COMPLIANT' : 'NON_COMPLIANT',

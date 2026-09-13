@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (email: string, _password: string, role: UserRole) => {
+  const login = useCallback(async (email: string, password: string, role: UserRole) => {
     const roleNames: Record<UserRole, { fullName: string; designation: string }> = {
       vendor: { fullName: 'Vendor Administrator', designation: 'Compliance Manager' },
       inspector: { fullName: 'Field Inspector', designation: 'Legal Metrology Inspector' },
@@ -78,6 +78,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       auditor: { fullName: 'Audit Observer', designation: 'Compliance Auditor' },
     };
 
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+    try {
+      const res = await fetch(`${apiBase}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: password || 'DefaultPassword123!' }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+          localStorage.setItem('labelguard_access_token', data.access_token);
+        }
+        if (data.user) {
+          const authUser: AuthUser = {
+            email: data.user.email,
+            fullName: data.user.full_name || roleNames[role]?.fullName || 'Authorized User',
+            role: (data.user.role as UserRole) || role,
+            designation: data.user.designation || roleNames[role]?.designation || 'Staff',
+            department: data.user.department,
+            district: data.user.district,
+            state: data.user.state,
+            companyName: data.user.company_name,
+            gstNumber: data.user.gst_number,
+          };
+          setUser(authUser);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Backend login unavailable, falling back to local session:', e);
+    }
+
+    // Graceful fallback for offline demo testing
     const authUser: AuthUser = {
       email,
       fullName: roleNames[role]?.fullName || 'Demo User',
@@ -92,8 +128,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {
-    // Simulate registration delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+    try {
+      const res = await fetch(`${apiBase}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password || 'SecurePassword123!',
+          full_name: data.fullName,
+          role: data.role,
+          designation: data.designation,
+          department: data.department,
+          district: data.district,
+          state: data.state,
+          company_name: data.companyName,
+          gst_number: data.gstNumber,
+        }),
+      });
+
+      if (res.ok) {
+        const resData = await res.json();
+        if (resData.access_token) {
+          localStorage.setItem('labelguard_access_token', resData.access_token);
+        }
+      }
+    } catch (e) {
+      console.warn('Backend registration error, using offline local session:', e);
+    }
 
     const authUser: AuthUser = {
       email: data.email,

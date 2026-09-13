@@ -32,7 +32,7 @@ export default function PreMarketClearanceModal({
 
   if (!isOpen) return null;
 
-  const clearanceId = `LM-INBOUND-2026-NTR-${record?.id.replace(/\D/g, '') || '9042'}`;
+  const clearanceId = `LM-INBOUND-2026-NTR-${(record?.id ? String(record.id).replace(/\D/g, '') : '') || '9042'}`;
   const shaSignature = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
   const today = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',

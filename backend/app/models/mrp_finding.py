@@ -4,12 +4,12 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    JSON,
     Numeric,
     String,
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -80,7 +80,7 @@ class MRPFinding(Base):
     )
 
     evidence: Mapped[dict | None] = mapped_column(
-        JSONB,
+        JSON,
         nullable=True,
     )
 

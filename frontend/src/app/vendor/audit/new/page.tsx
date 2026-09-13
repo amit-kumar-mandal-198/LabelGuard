@@ -108,6 +108,7 @@ export default function NewSelfAuditPage() {
           sku,
           declaredMrp,
           category,
+          file: selectedFile,
         }).then((data) => {
           setResult(data);
           setStep(4);

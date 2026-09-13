@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   FileText,
@@ -18,9 +18,18 @@ import { ApiClient } from '@/lib/api-client';
 import { Section36Notice } from '@/lib/types';
 
 export default function PendingNoticesPage() {
-  const notices = ApiClient.getNotices();
+  const [notices, setNotices] = useState<Section36Notice[]>(ApiClient.getNotices());
   const [selectedNotice, setSelectedNotice] = useState<Section36Notice>(notices[0]);
   const [issuedStatus, setIssuedStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    ApiClient.fetchNotices().then((data) => {
+      if (data && data.length > 0) {
+        setNotices(data);
+        setSelectedNotice(data[0]);
+      }
+    });
+  }, []);
 
   const handleApprove = () => {
     setIssuedStatus('Notice officially signed, cryptographically stamped, and transmitted to registered vendor email.');

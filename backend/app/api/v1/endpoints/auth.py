@@ -5,20 +5,23 @@ from app.core.dependencies import get_current_user, require_roles
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
+    AuthSuccessResponse,
     CurrentUserResponse,
     LoginRequest,
+    RegisterRequest,
     TokenResponse,
 )
 from app.services.auth_service import (
     authenticate_user,
     create_login_token,
+    register_user,
 )
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=AuthSuccessResponse)
 def login(
     payload: LoginRequest,
     db: Session = Depends(get_db),
@@ -41,6 +44,53 @@ def login(
     return {
         "access_token": token,
         "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": user.role.name,
+            "is_active": user.is_active,
+        },
+    }
+
+
+@router.post("/register", response_model=AuthSuccessResponse, status_code=status.HTTP_201_CREATED)
+def register(
+    payload: RegisterRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        user = register_user(
+            db=db,
+            email=payload.email,
+            password=payload.password,
+            full_name=payload.full_name,
+            role_name=payload.role or "vendor",
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    token = create_login_token(user)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": user.role.name,
+            "is_active": user.is_active,
+            "designation": payload.designation,
+            "department": payload.department,
+            "district": payload.district,
+            "state": payload.state,
+            "company_name": payload.company_name,
+            "gst_number": payload.gst_number,
+        },
     }
 
 

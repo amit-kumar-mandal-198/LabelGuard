@@ -39,6 +39,13 @@ async def root():
     }
 
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+storage_path = Path(__file__).resolve().parent.parent / "storage"
+storage_path.mkdir(parents=True, exist_ok=True)
+app.mount("/storage", StaticFiles(directory=str(storage_path)), name="storage")
+
 app.include_router(
     api_router,
     prefix=settings.api_v1_prefix,

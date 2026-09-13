@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ApiClient } from '@/lib/api-client';
 import {
   Camera,
   X,
@@ -21,6 +23,7 @@ import {
 type CameraState = 'requesting' | 'active' | 'denied' | 'captured' | 'uploading' | 'error';
 
 export default function InspectorCameraPage() {
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -162,16 +165,35 @@ export default function InspectorCameraPage() {
     }
   };
 
-  const handleUpload = () => {
+  const dataURLtoBlob = (dataurl: string) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
+  const handleUpload = async () => {
+    if (!capturedImage) return;
     setCameraState('uploading');
-    // Backend team will implement the actual upload logic here
-    // For now, simulate a brief uploading state then show success
-    setTimeout(() => {
-      // This is where the backend API call would go
-      // e.g., await fetch('/api/inspector/scan', { method: 'POST', body: formData })
-      setCameraState('captured');
-      alert('📸 Photo captured successfully! The scanning analysis will be processed by the backend.');
-    }, 1500);
+    try {
+      const blob = dataURLtoBlob(capturedImage);
+      const record = await ApiClient.quickScan({
+        file: blob,
+        productName: 'Field Inspection Commodity',
+        brand: 'Retail Inspection Sample',
+        declaredMrp: 120.0,
+        scanSource: 'field_inspector',
+      });
+      router.push(`/scan/${record.id}`);
+    } catch (e) {
+      console.warn('Upload fallback, navigating to scans:', e);
+      router.push('/inspector/scans');
+    }
   };
 
   return (
