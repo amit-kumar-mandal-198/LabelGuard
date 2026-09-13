@@ -190,9 +190,7 @@ def create_inspection_image(
 
     image = InspectionImage(
         inspection_id=inspection_id,
-        file_name=Path(
-            upload_file.filename or "image"
-        ).name,
+        file_name=Path(file_path).name,
         file_path=file_path,
         image_type=normalized_type,
         file_size=file_size,

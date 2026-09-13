@@ -32,7 +32,7 @@ import {
   Copy,
   ExternalLink,
 } from 'lucide-react';
-import { ApiClient } from '@/lib/api-client';
+import { ApiClient, resolveImageUrl } from '@/lib/api-client';
 import { InspectionRecord, BoundingBox } from '@/lib/types';
 import OfficialCertificateModal from '@/components/vendor/OfficialCertificateModal';
 
@@ -567,10 +567,13 @@ export default function NewSelfAuditPage() {
               {/* Interactive Canvas Container */}
               <div className="relative rounded-lg overflow-hidden border border-zinc-300 bg-zinc-950 group">
                 <img
-                  src={previewUrl || result.imageUrl || '/samples/biscuits.jpg'}
+                  src={resolveImageUrl(previewUrl || result.imageUrl)}
                   alt={result.productName}
                   onError={(e) => {
-                    e.currentTarget.src = '/samples/biscuits.jpg';
+                    const target = e.currentTarget;
+                    if (!target.src.includes('/samples/biscuits.jpg')) {
+                      target.src = '/samples/biscuits.jpg';
+                    }
                   }}
                   className={`w-full h-[300px] sm:h-[440px] object-cover transition-transform duration-300 ${
                     isZoomed ? 'scale-125 cursor-zoom-out' : 'scale-100'

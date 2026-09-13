@@ -16,6 +16,7 @@ import {
   Layers
 } from 'lucide-react';
 import { InspectionRecord } from '@/lib/types';
+import { resolveImageUrl } from '@/lib/api-client';
 
 interface ArtworkRemediationDrawerProps {
   isOpen: boolean;
@@ -103,8 +104,14 @@ export default function ArtworkRemediationDrawer({
             </span>
             <div className="relative rounded-xl overflow-hidden border border-zinc-200 bg-zinc-950 flex items-center justify-center p-4">
               <img
-                src={record.imageUrl || '/samples/biscuits.jpg'}
+                src={resolveImageUrl(record.imageUrl)}
                 alt={record.productName}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes('/samples/biscuits.jpg')) {
+                    target.src = '/samples/biscuits.jpg';
+                  }
+                }}
                 className="max-h-56 object-contain rounded-lg shadow-sm"
               />
               {/* Highlight Overlay Indicator */}

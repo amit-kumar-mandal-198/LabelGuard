@@ -23,7 +23,7 @@ import {
   UploadCloud,
   FileSpreadsheet
 } from 'lucide-react';
-import { ApiClient } from '@/lib/api-client';
+import { ApiClient, resolveImageUrl } from '@/lib/api-client';
 import { InspectionRecord } from '@/lib/types';
 import BulkArtworkDropzone from '@/components/vendor/BulkArtworkDropzone';
 import FinancialRiskCalculator from '@/components/vendor/FinancialRiskCalculator';
@@ -285,8 +285,14 @@ export default function VendorDashboard() {
                     <div className="flex items-center gap-3">
                       {item.imageUrl && (
                         <img
-                          src={item.imageUrl}
+                          src={resolveImageUrl(item.imageUrl)}
                           alt={item.productName}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.includes('/samples/biscuits.jpg')) {
+                              target.src = '/samples/biscuits.jpg';
+                            }
+                          }}
                           className="w-9 h-9 rounded-lg object-cover border border-zinc-200 shrink-0"
                         />
                       )}

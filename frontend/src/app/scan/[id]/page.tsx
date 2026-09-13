@@ -17,7 +17,7 @@ import {
   Layers,
   FileCheck2,
 } from 'lucide-react';
-import { ApiClient } from '@/lib/api-client';
+import { ApiClient, resolveImageUrl } from '@/lib/api-client';
 import { BoundingBox } from '@/lib/types';
 
 export default function ScanDetailPage() {
@@ -114,7 +114,17 @@ export default function ScanDetailPage() {
           </div>
 
           <div className="relative rounded-lg overflow-hidden border border-zinc-300 bg-zinc-950">
-            <img src={scan.imageUrl} alt={scan.productName} className="w-full h-96 object-cover opacity-90" />
+            <img
+              src={resolveImageUrl(scan.imageUrl)}
+              alt={scan.productName}
+              className="w-full h-96 object-cover"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.includes('/samples/biscuits.jpg')) {
+                  target.src = '/samples/biscuits.jpg';
+                }
+              }}
+            />
 
             {/* Overlaid Bounding Boxes */}
             {scan.declarations

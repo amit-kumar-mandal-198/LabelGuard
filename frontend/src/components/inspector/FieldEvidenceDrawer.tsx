@@ -18,6 +18,7 @@ import {
   Building,
 } from 'lucide-react';
 import { InspectionRecord } from '@/lib/types';
+import { resolveImageUrl } from '@/lib/api-client';
 
 interface FieldEvidenceDrawerProps {
   isOpen: boolean;
@@ -120,10 +121,13 @@ export default function FieldEvidenceDrawer({
             <div className="relative rounded-xl overflow-hidden border border-zinc-300 bg-zinc-950">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={record.imageUrl || '/samples/biscuits.jpg'}
+                src={resolveImageUrl(record.imageUrl)}
                 alt={record.productName}
                 onError={(e) => {
-                  e.currentTarget.src = '/samples/biscuits.jpg';
+                  const target = e.currentTarget;
+                  if (!target.src.includes('/samples/biscuits.jpg')) {
+                    target.src = '/samples/biscuits.jpg';
+                  }
                 }}
                 className="w-full h-56 object-cover opacity-90"
               />

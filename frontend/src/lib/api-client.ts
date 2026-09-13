@@ -26,6 +26,21 @@ export const getApiBase = (): string => {
   return 'http://localhost:8000/api/v1';
 };
 
+export const resolveImageUrl = (url?: string | null): string => {
+  if (!url) return '/samples/biscuits.jpg';
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/storage/')) {
+    if (typeof window !== 'undefined' && window.location?.hostname) {
+      const protocol = window.location.protocol || 'http:';
+      const host = window.location.hostname;
+      return `${protocol}//${host}:8000${url}`;
+    }
+    return `http://localhost:8000${url}`;
+  }
+  return url;
+};
+
 const getAuthHeaders = (): Record<string, string> => {
   if (typeof window === 'undefined') return {};
   const token = localStorage.getItem('labelguard_access_token');

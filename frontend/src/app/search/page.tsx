@@ -18,7 +18,7 @@ import {
   ShieldCheck,
   Layers
 } from 'lucide-react';
-import { ApiClient } from '@/lib/api-client';
+import { ApiClient, resolveImageUrl } from '@/lib/api-client';
 
 export default function UniversalSearchPage() {
   const [query, setQuery] = useState('');
@@ -203,8 +203,14 @@ export default function UniversalSearchPage() {
                     <div className="flex items-center gap-3">
                       {item.imageUrl && (
                         <img
-                          src={item.imageUrl}
+                          src={resolveImageUrl(item.imageUrl)}
                           alt={item.productName}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.includes('/samples/biscuits.jpg')) {
+                              target.src = '/samples/biscuits.jpg';
+                            }
+                          }}
                           className="w-10 h-10 rounded-lg object-cover border border-zinc-200 shrink-0"
                         />
                       )}
