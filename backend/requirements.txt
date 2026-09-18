@@ -42,3 +42,7 @@ pytesseract
 numpy
 Pillow
 google-generativeai
+qrcode
+reportlab
+requests
+beautifulsoup4
