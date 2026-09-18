@@ -24,4 +24,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Start command: Run migrations, seed the database with rules, and start the FastAPI server
-CMD ["sh", "-c", "alembic -c migrations/alembic.ini upgrade head && python -m app.scripts.seed_database && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic -c migrations/alembic.ini upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
