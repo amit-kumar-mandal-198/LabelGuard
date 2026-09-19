@@ -17,21 +17,35 @@ import {
 import { ApiClient } from '@/lib/api-client';
 import { Section36Notice } from '@/lib/types';
 
+function formatDate(dateStr?: string) {
+  if (!dateStr) return '09/09/2026';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export default function PendingNoticesPage() {
-  const [notices, setNotices] = useState<Section36Notice[]>(ApiClient.getNotices());
-  const [selectedNotice, setSelectedNotice] = useState<Section36Notice>(notices[0]);
+  const [notices, setNotices] = useState<Section36Notice[]>(() => ApiClient.getNotices() || []);
+  const [selectedNotice, setSelectedNotice] = useState<Section36Notice | null>(() => {
+    const list = ApiClient.getNotices();
+    return list && list.length > 0 ? list[0] : null;
+  });
   const [issuedStatus, setIssuedStatus] = useState<string | null>(null);
 
   useEffect(() => {
     ApiClient.fetchNotices().then((data) => {
-      if (data && data.length > 0) {
+      if (data && Array.isArray(data) && data.length > 0) {
         setNotices(data);
-        setSelectedNotice(data[0]);
+        setSelectedNotice((prev) => (prev ? prev : data[0]));
       }
     });
   }, []);
 
   const handleApprove = () => {
+    if (!selectedNotice) return;
     setIssuedStatus('Notice officially signed, cryptographically stamped, and transmitted to registered vendor email.');
     ApiClient.updateNoticeStatus(selectedNotice.id, 'approved');
   };
@@ -76,7 +90,7 @@ export default function PendingNoticesPage() {
                 setIssuedStatus(null);
               }}
               className={`p-4 rounded-xl border cursor-pointer transition text-xs space-y-2 ${
-                selectedNotice.id === n.id
+                selectedNotice?.id === n.id
                   ? 'bg-amber-50/70 border-amber-400 shadow-sm ring-1 ring-amber-300'
                   : 'bg-white border-zinc-200 hover:bg-zinc-50'
               }`}
@@ -94,129 +108,139 @@ export default function PendingNoticesPage() {
               <p className="font-semibold text-zinc-800">{n.productName}</p>
               <p className="text-zinc-500 text-[11px]">{n.companyName}</p>
               <div className="text-rose-700 font-medium text-[11px]">
-                {n.violations.length} statutory violation count(s)
+                {(n.violations || []).length} statutory violation count(s)
               </div>
             </div>
           ))}
         </div>
 
         {/* Notice Official Document Letterhead Viewer (8 Cols) */}
-        <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-xl p-4 sm:p-8 shadow-xs space-y-6">
-          {issuedStatus && (
-            <div className="p-4 bg-emerald-100/80 border border-emerald-300 rounded-lg text-emerald-900 text-xs font-semibold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>{issuedStatus}</span>
-            </div>
-          )}
-
-          {/* Official Letterhead */}
-          <div className="text-center border-b-2 border-zinc-300 pb-4 space-y-1">
-            <p className="font-bold text-xs tracking-widest uppercase text-zinc-600">
-              GOVERNMENT OF UTTAR PRADESH
-            </p>
-            <p className="font-bold text-sm tracking-wide text-zinc-900">
-              OFFICE OF THE CONTROLLER OF LEGAL METROLOGY
-            </p>
-            <p className="text-[11px] text-zinc-500">
-              Vigyan Bhawan, Sector 12, Lucknow / Gautam Buddha Nagar Division
-            </p>
-            <p className="text-[11px] font-mono font-bold text-amber-800 pt-1">
-              NOTICE UNDER SECTION 36 OF LEGAL METROLOGY ACT, 2009
+        {!selectedNotice ? (
+          <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-xl p-8 text-center text-zinc-500 space-y-3">
+            <FileText className="w-10 h-10 text-zinc-300 mx-auto" />
+            <p className="font-bold text-zinc-800">No Pending Notices in Queue</p>
+            <p className="text-xs text-zinc-500">
+              All statutory notices have been reviewed and processed by the Controller.
             </p>
           </div>
+        ) : (
+          <div className="lg:col-span-8 bg-white border border-zinc-200 rounded-xl p-4 sm:p-8 shadow-xs space-y-6">
+            {issuedStatus && (
+              <div className="p-4 bg-emerald-100/80 border border-emerald-300 rounded-lg text-emerald-900 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>{issuedStatus}</span>
+              </div>
+            )}
 
-          {/* Notice Body */}
-          <div className="space-y-4 text-xs leading-relaxed text-zinc-800">
-            <div className="flex flex-col sm:flex-row justify-between font-mono text-[11px] bg-zinc-50 p-3 rounded border border-zinc-200 gap-1">
-              <div>
-                <span>Notice Ref: </span>
-                <strong className="text-zinc-900">{selectedNotice.noticeNumber}</strong>
-              </div>
-              <div>
-                <span>Dated: </span>
-                <strong>{new Date(selectedNotice.draftedAt).toLocaleDateString()}</strong>
-              </div>
+            {/* Official Letterhead */}
+            <div className="text-center border-b-2 border-zinc-300 pb-4 space-y-1">
+              <p className="font-bold text-xs tracking-widest uppercase text-zinc-600">
+                GOVERNMENT OF UTTAR PRADESH
+              </p>
+              <p className="font-bold text-sm tracking-wide text-zinc-900">
+                OFFICE OF THE CONTROLLER OF LEGAL METROLOGY
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                Vigyan Bhawan, Sector 12, Lucknow / Gautam Buddha Nagar Division
+              </p>
+              <p className="text-[11px] font-mono font-bold text-amber-800 pt-1">
+                NOTICE UNDER SECTION 36 OF LEGAL METROLOGY ACT, 2009
+              </p>
             </div>
 
-            <div>
-              <p className="font-bold text-zinc-900">TO:</p>
-              <p className="font-bold text-zinc-900">{selectedNotice.companyName}</p>
-              <p className="text-zinc-600">{selectedNotice.companyAddress}</p>
-              <p className="font-mono text-zinc-500">GSTIN: {selectedNotice.gstNumber || 'REGISTERED PACKER'}</p>
-            </div>
+            {/* Notice Body */}
+            <div className="space-y-4 text-xs leading-relaxed text-zinc-800">
+              <div className="flex flex-col sm:flex-row justify-between font-mono text-[11px] bg-zinc-50 p-3 rounded border border-zinc-200 gap-1">
+                <div>
+                  <span>Notice Ref: </span>
+                  <strong className="text-zinc-900">{selectedNotice.noticeNumber}</strong>
+                </div>
+                <div>
+                  <span>Dated: </span>
+                  <strong suppressHydrationWarning>{formatDate(selectedNotice.draftedAt)}</strong>
+                </div>
+              </div>
 
-            <p>
-              <strong>SUBJECT:</strong> Notice of Inspection & Prima Facie Evidence of Packaging Non-Compliance regarding{' '}
-              <span className="underline font-semibold">{selectedNotice.productName}</span>.
-            </p>
+              <div>
+                <p className="font-bold text-zinc-900">TO:</p>
+                <p className="font-bold text-zinc-900">{selectedNotice.companyName}</p>
+                <p className="text-zinc-600">{selectedNotice.companyAddress}</p>
+                <p className="font-mono text-zinc-500">GSTIN: {selectedNotice.gstNumber || 'REGISTERED PACKER'}</p>
+              </div>
 
-            <p>
-              WHEREAS, an on-site market inspection conducted by the Legal Metrology Field Enforcement Squad revealed statutory non-compliances under the Legal Metrology (Packaged Commodities) Rules, 2011, detailed as follows:
-            </p>
+              <p>
+                <strong>SUBJECT:</strong> Notice of Inspection & Prima Facie Evidence of Packaging Non-Compliance regarding{' '}
+                <span className="underline font-semibold">{selectedNotice.productName}</span>.
+              </p>
 
-            {/* Cited Violations Table */}
-            <div className="border border-zinc-200 rounded-lg overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-zinc-100 text-zinc-700 font-semibold">
-                  <tr>
-                    <th className="p-2.5">Statutory Rule</th>
-                    <th className="p-2.5">Act Section</th>
-                    <th className="p-2.5">Specific Finding</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200">
-                  {selectedNotice.violations.map((v, i) => (
-                    <tr key={i} className="bg-white">
-                      <td className="p-2.5 font-bold text-rose-700">{v.rule}</td>
-                      <td className="p-2.5 font-mono">{v.section}</td>
-                      <td className="p-2.5 text-zinc-700">{v.description}</td>
+              <p>
+                WHEREAS, an on-site market inspection conducted by the Legal Metrology Field Enforcement Squad revealed statutory non-compliances under the Legal Metrology (Packaged Commodities) Rules, 2011, detailed as follows:
+              </p>
+
+              {/* Cited Violations Table */}
+              <div className="border border-zinc-200 rounded-lg overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-100 text-zinc-700 font-semibold">
+                    <tr>
+                      <th className="p-2.5">Statutory Rule</th>
+                      <th className="p-2.5">Act Section</th>
+                      <th className="p-2.5">Specific Finding</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-[11px] text-amber-900">
-              <strong>STATUTORY PENALTY CLAUSE:</strong> {selectedNotice.penaltyClause}
-            </div>
-
-            <p>
-              You are hereby called upon to show cause within <strong>{selectedNotice.responseDeadlineDays} days</strong> of receipt of this notice as to why penal proceedings under Section 36 of the Legal Metrology Act, 2009 should not be initiated against you, or why the said offences should not be compounded upon payment of statutory fees.
-            </p>
-
-            {/* Signature & Audit Stamp */}
-            <div className="pt-6 border-t border-zinc-200 flex justify-between items-end">
-              <div>
-                <p className="font-mono text-[10px] text-zinc-400 uppercase">Cryptographic Audit Stamp</p>
-                <p className="font-mono text-[10px] text-zinc-600">{selectedNotice.digitalSignatureHash}</p>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200">
+                    {(selectedNotice.violations || []).map((v, i) => (
+                      <tr key={i} className="bg-white">
+                        <td className="p-2.5 font-bold text-rose-700">{v.rule}</td>
+                        <td className="p-2.5 font-mono">{v.section}</td>
+                        <td className="p-2.5 text-zinc-700">{v.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-              <div className="text-right">
-                <p className="font-bold text-zinc-900">{selectedNotice.issuingOfficer}</p>
-                <p className="text-[11px] text-zinc-500">{selectedNotice.designation}</p>
-                <p className="text-[10px] text-emerald-700 font-semibold">Signed digitally via SLCS portal</p>
+              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-[11px] text-amber-900">
+                <strong>STATUTORY PENALTY CLAUSE:</strong> {selectedNotice.penaltyClause}
+              </div>
+
+              <p>
+                You are hereby called upon to show cause within <strong>{selectedNotice.responseDeadlineDays} days</strong> of receipt of this notice as to why penal proceedings under Section 36 of the Legal Metrology Act, 2009 should not be initiated against you, or why the said offences should not be compounded upon payment of statutory fees.
+              </p>
+
+              {/* Signature & Audit Stamp */}
+              <div className="pt-6 border-t border-zinc-200 flex justify-between items-end">
+                <div>
+                  <p className="font-mono text-[10px] text-zinc-400 uppercase">Cryptographic Audit Stamp</p>
+                  <p className="font-mono text-[10px] text-zinc-600">{selectedNotice.digitalSignatureHash}</p>
+                </div>
+
+                <div className="text-right">
+                  <p className="font-bold text-zinc-900">{selectedNotice.issuingOfficer}</p>
+                  <p className="text-[11px] text-zinc-500">{selectedNotice.designation}</p>
+                  <p className="text-[10px] text-emerald-700 font-semibold">Signed digitally via SLCS portal</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Controller Decision Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200 flex-wrap">
-            <button
-              onClick={() => ApiClient.downloadNoticePdf(selectedNotice.inspectionId || selectedNotice.id)}
-              className="px-4 py-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition"
-            >
-              <Download className="w-3.5 h-3.5 text-zinc-600" />
-              <span>Download Official Notice (PDF)</span>
-            </button>
-            <button
-              onClick={handleApprove}
-              className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Approve & Issue Notice</span>
-            </button>
+            {/* Controller Decision Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200 flex-wrap">
+              <button
+                onClick={() => ApiClient.downloadNoticePdf(selectedNotice.inspectionId || selectedNotice.id)}
+                className="px-4 py-2 bg-white hover:bg-zinc-100 text-zinc-800 border border-zinc-300 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition"
+              >
+                <Download className="w-3.5 h-3.5 text-zinc-600" />
+                <span>Download Official Notice (PDF)</span>
+              </button>
+              <button
+                onClick={handleApprove}
+                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Approve & Issue Notice</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-zinc-950 tracking-tight leading-tight">
-            AI-Assisted Legal Metrology <br className="hidden sm:inline" />
+            Intelligent Legal Metrology <br className="hidden sm:inline" />
             <span className="text-emerald-700">
               Compliance & Enforcement
             </span>

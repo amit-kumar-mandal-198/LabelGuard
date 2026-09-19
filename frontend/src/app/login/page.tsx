@@ -184,41 +184,65 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    login('vendor@labelguard.gov.in', 'demo', 'vendor');
-                    router.push('/vendor/audit/new');
+                  disabled={isLoading}
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('vendor@labelguard.gov.in', 'demo1234', 'vendor');
+                      router.push('/vendor/audit/new');
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
-                  className="px-2.5 py-2 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate"
+                  className="px-2.5 py-2 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🟢 Vendor Audit
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    login('inspector@labelguard.gov.in', 'demo', 'inspector');
-                    router.push('/inspector/scans');
+                  disabled={isLoading}
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('inspector@labelguard.gov.in', 'demo1234', 'inspector');
+                      router.push('/inspector/scans');
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
-                  className="px-2.5 py-2 bg-white hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate"
+                  className="px-2.5 py-2 bg-white hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🔵 Field Inspector
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    login('controller@labelguard.gov.in', 'demo', 'controller');
-                    router.push('/dashboard/district');
+                  disabled={isLoading}
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('controller@labelguard.gov.in', 'demo1234', 'controller');
+                      router.push('/dashboard/district');
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
-                  className="px-2.5 py-2 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate"
+                  className="px-2.5 py-2 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🟡 Controller Hub
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    login('admin@labelguard.gov.in', 'demo', 'admin');
-                    router.push('/dashboard/admin');
+                  disabled={isLoading}
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('admin@labelguard.gov.in', 'demo1234', 'admin');
+                      router.push('/dashboard/admin');
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
-                  className="px-2.5 py-2 bg-white hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate"
+                  className="px-2.5 py-2 bg-white hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🟣 National Admin
                 </button>

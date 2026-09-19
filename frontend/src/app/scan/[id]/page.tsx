@@ -17,7 +17,7 @@ import {
   Layers,
   FileCheck2,
 } from 'lucide-react';
-import { ApiClient, resolveImageUrl } from '@/lib/api-client';
+import { ApiClient, resolveImageUrl, getFallbackProductImage } from '@/lib/api-client';
 import { BoundingBox } from '@/lib/types';
 
 export default function ScanDetailPage() {
@@ -122,13 +122,14 @@ export default function ScanDetailPage() {
 
           <div className="relative rounded-lg overflow-hidden border border-zinc-300 bg-zinc-950">
             <img
-              src={resolveImageUrl(scan.imageUrl)}
+              src={resolveImageUrl(scan.imageUrl, scan.productName, scan.category, scan.brand)}
               alt={scan.productName}
               className="w-full h-96 object-cover"
               onError={(e) => {
+                const fallback = getFallbackProductImage(scan.productName, scan.category, scan.brand);
                 const target = e.currentTarget;
-                if (!target.src.includes('/samples/biscuits.jpg')) {
-                  target.src = '/samples/biscuits.jpg';
+                if (target.src !== fallback && !target.src.endsWith(fallback)) {
+                  target.src = fallback;
                 }
               }}
             />

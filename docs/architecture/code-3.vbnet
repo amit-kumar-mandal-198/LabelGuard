@@ -1,0 +1,67 @@
+START
+  │
+  ▼
+┌────────────────────────┐
+│ LOGIN (Role-based)     │──► Inspector? Controller? State Admin?
+└───────────┬────────────┘
+            ▼
+┌────────────────────────────────────────────┐
+│ ROLE-BASED ROUTING                         │
+├────────────────────────────────────────────┤
+│ INSPECTOR (Mobile):                        │
+│  → Field Inspection Mode                   │
+│ CONTROLLER (Web):                          │
+│  → District Dashboard, Approvals           │
+│ STATE ADMIN (Web):                         │
+│  → Analytics, User Mgmt, Trends            │
+└──────┬─────────────────────────────────────┘
+       ▼
+╔══════════════════════════════════════════╗
+║        INSPECTOR FIELD WORKFLOW          ║
+╠══════════════════════════════════════════╣
+║ 1. Open App → "New Inspection"           ║
+║ 2. Scan product barcode (optional) or    ║
+║    photograph all label sides            ║
+║ 3. App auto-checks: blur/glare/resolution║
+║    ↳ Bad photo? → Retake prompt (loop)   ║
+║ 4. On-device quick OCR → offline result  ║
+║    preview (works without internet!)     ║
+║ 5. Confirm product details (brand, SKU,  ║
+║    shop name, GPS auto-tagged)           ║
+║ 6. Submit → Syncs when online            ║
+╚═════════════╦════════════════════════════╝
+              ▼
+┌─────────────────────────────┐
+│ SERVER: Full AI Pipeline    │
+│ OCR → Extract → Validate    │
+└───────┬─────────────────────┘
+        ▼
+┌─────────────────────────────┐
+│ VIOLATION FOUND?            │
+│                             │
+│ NO ──► Mark "Compliant"     │
+│         in repository       │
+│                             │
+│ YES ► Severity Check:       │
+│   ├─ Minor → Report only    │
+│   ├─ Major → Report + SMS   │
+│   │          alert vendor   │
+│   └─ CRITICAL → Auto-draft  │
+│        Section 36 notice →  │
+│        sent to Controller   │
+│        for approval         │
+└───────┬─────────────────────┘
+        ▼
+┌──────────────────────────────────┐
+│ CONTROLLER APPROVAL LOOP:        │
+│ Notice draft → Review → Approve/ │
+│ Edit → Issue to Manufacturer     │
+└───────┬──────────────────────────┘
+        ▼
+┌──────────────────────────────────┐
+│ REPEAT-OFFENDER ENGINE:          │
+│ Same brand ≥3 violations?        │
+│ YES → Escalate flag to State     │
+│ Admin dashboard + priority       │
+│ inspection queue                 │
+└──────────────────────────────────┘

@@ -18,7 +18,7 @@ import {
   Building,
 } from 'lucide-react';
 import { InspectionRecord } from '@/lib/types';
-import { resolveImageUrl } from '@/lib/api-client';
+import { resolveImageUrl, getFallbackProductImage } from '@/lib/api-client';
 
 interface FieldEvidenceDrawerProps {
   isOpen: boolean;
@@ -121,12 +121,13 @@ export default function FieldEvidenceDrawer({
             <div className="relative rounded-xl overflow-hidden border border-zinc-300 bg-zinc-950">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={resolveImageUrl(record.imageUrl)}
+                src={resolveImageUrl(record.imageUrl, record.productName, record.category, record.brand)}
                 alt={record.productName}
                 onError={(e) => {
+                  const fallback = getFallbackProductImage(record.productName, record.category, record.brand);
                   const target = e.currentTarget;
-                  if (!target.src.includes('/samples/biscuits.jpg')) {
-                    target.src = '/samples/biscuits.jpg';
+                  if (target.src !== fallback && !target.src.endsWith(fallback)) {
+                    target.src = fallback;
                   }
                 }}
                 className="w-full h-56 object-cover opacity-90"

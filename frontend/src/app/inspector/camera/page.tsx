@@ -199,12 +199,13 @@ export default function InspectorCameraPage() {
   return (
     <div className="fixed inset-0 bg-black flex flex-col z-50">
       {/* Hidden canvas for capture */}
-      <canvas ref={canvasRef} className="hidden" />
+      <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
 
       {/* Top Bar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 to-transparent">
         <Link
           href="/inspector/scans"
+          aria-label="Close scanner and return to field scans"
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all active:scale-90 hover:bg-white/20"
         >
           <X className="w-5 h-5" />
@@ -221,6 +222,7 @@ export default function InspectorCameraPage() {
           {torchSupported && cameraState === 'active' && (
             <button
               onClick={toggleTorch}
+              aria-label={torchOn ? "Turn off flashlight" : "Turn on flashlight"}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                 torchOn
                   ? 'bg-amber-400 text-black shadow-[0_0_20px_rgba(251,191,36,0.5)]'
@@ -377,12 +379,13 @@ export default function InspectorCameraPage() {
         {cameraState === 'active' && (
           <div className="flex items-center justify-between">
             {/* Native Mobile Gallery / Camera Fallback */}
-            <label className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 cursor-pointer" title="Upload from Device">
+            <label className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 cursor-pointer" title="Upload from Device" aria-label="Upload packaging photo from device">
               <ImageIcon className="w-5 h-5" />
               <input
                 type="file"
                 accept="image/*"
                 className="hidden"
+                aria-label="Select packaging image file"
                 onChange={handleFileSelect}
               />
             </label>
@@ -390,6 +393,7 @@ export default function InspectorCameraPage() {
             {/* Capture Button */}
             <button
               onClick={capturePhoto}
+              aria-label="Capture product label"
               className="w-[72px] h-[72px] rounded-full bg-white border-[4px] border-white/30 shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center justify-center transition-all active:scale-90 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]"
             >
               <div className="w-[60px] h-[60px] rounded-full bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">
@@ -400,6 +404,7 @@ export default function InspectorCameraPage() {
             {/* Switch Camera */}
             <button
               onClick={switchCamera}
+              aria-label="Switch camera direction"
               className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
             >
               <RotateCcw className="w-5 h-5" />

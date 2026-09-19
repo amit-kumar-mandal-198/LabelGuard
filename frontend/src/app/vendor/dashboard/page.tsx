@@ -23,7 +23,7 @@ import {
   UploadCloud,
   FileSpreadsheet
 } from 'lucide-react';
-import { ApiClient, resolveImageUrl } from '@/lib/api-client';
+import { ApiClient, resolveImageUrl, getFallbackProductImage } from '@/lib/api-client';
 import { InspectionRecord } from '@/lib/types';
 import BulkArtworkDropzone from '@/components/vendor/BulkArtworkDropzone';
 import FinancialRiskCalculator from '@/components/vendor/FinancialRiskCalculator';
@@ -285,12 +285,13 @@ export default function VendorDashboard() {
                     <div className="flex items-center gap-3">
                       {item.imageUrl && (
                         <img
-                          src={resolveImageUrl(item.imageUrl)}
+                          src={resolveImageUrl(item.imageUrl, item.productName, item.category, item.brand)}
                           alt={item.productName}
                           onError={(e) => {
+                            const fallback = getFallbackProductImage(item.productName, item.category, item.brand);
                             const target = e.currentTarget;
-                            if (!target.src.includes('/samples/biscuits.jpg')) {
-                              target.src = '/samples/biscuits.jpg';
+                            if (target.src !== fallback && !target.src.endsWith(fallback)) {
+                              target.src = fallback;
                             }
                           }}
                           className="w-9 h-9 rounded-lg object-cover border border-zinc-200 shrink-0"

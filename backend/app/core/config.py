@@ -3,6 +3,17 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+from pathlib import Path
+
+_backend_dir = Path(__file__).resolve().parent.parent.parent
+_possible_env_files = [
+    _backend_dir / ".env",
+    _backend_dir.parent / ".env",
+    Path(".env"),
+]
+_active_env_files = [str(p) for p in _possible_env_files if p.exists()] or [".env"]
+
+
 class Settings(BaseSettings):
     app_name: str = "LABELGUARD"
     environment: str = "development"
@@ -20,7 +31,7 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_active_env_files,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

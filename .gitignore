@@ -69,6 +69,7 @@ pnpm-debug.log*
 backend/pipeline_time.txt
 backend/ocr_profile.txt
 backend/ocr_profile_after.txt
+tunnel_url.txt
 
 # ==========================================
 # OS & IDE
