@@ -37,6 +37,17 @@ def register_user(
     password: str,
     full_name: str,
     role_name: str = "vendor",
+    designation: str | None = None,
+    department: str | None = None,
+    district: str | None = None,
+    state: str | None = None,
+    company_name: str | None = None,
+    gst_number: str | None = None,
+    lut_number: str | None = None,
+    badge_number: str | None = None,
+    entity_category: str | None = None,
+    address: str | None = None,
+    organization: str | None = None,
 ) -> User:
     normalized_email = email.lower().strip()
     existing = db.scalar(select(User).where(User.email == normalized_email))
@@ -55,6 +66,17 @@ def register_user(
         email=normalized_email,
         password_hash=hash_password(password),
         is_active=True,
+        designation=designation,
+        department=department,
+        district=district,
+        state=state,
+        company_name=company_name,
+        gst_number=gst_number,
+        lut_number=lut_number,
+        badge_number=badge_number,
+        entity_category=entity_category,
+        address=address,
+        organization=organization,
     )
     db.add(new_user)
     db.commit()

@@ -20,8 +20,8 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (email: string, password: string, role?: UserRole) => Promise<AuthUser>;
+  register: (data: RegisterData) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -52,92 +52,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session from localStorage on mount
+  // Restore session from localStorage on mount (requires both valid token and stored user)
   useEffect(() => {
     try {
+      const token = localStorage.getItem('labelguard_access_token');
       const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
+      if (token && stored) {
         const parsed = JSON.parse(stored) as AuthUser;
         if (parsed && parsed.email && parsed.role) {
           setUser(parsed);
+        } else {
+          setUser(null);
         }
+      } else {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem('labelguard_access_token');
+        setUser(null);
       }
     } catch {
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem('labelguard_access_token');
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string, role: UserRole) => {
-    const roleNames: Record<UserRole, { fullName: string; designation: string }> = {
-      vendor: { fullName: 'Vendor Administrator', designation: 'Compliance Manager' },
-      inspector: { fullName: 'Field Inspector', designation: 'Legal Metrology Inspector' },
-      controller: { fullName: 'District Controller', designation: 'Assistant Controller (LM)' },
-      admin: { fullName: 'National Administrator', designation: 'Director, Dept. of Legal Metrology' },
-      auditor: { fullName: 'Audit Observer', designation: 'Compliance Auditor' },
-    };
-
+  const login = useCallback(async (email: string, password: string, _role?: UserRole): Promise<AuthUser> => {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+    let res: Response;
     try {
-      const res = await fetch(`${apiBase}/auth/login`, {
+      res = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: password || 'DefaultPassword123!' }),
+        body: JSON.stringify({ email: email.trim(), password }),
+        signal: AbortSignal.timeout(5000),
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.access_token) {
-          localStorage.setItem('labelguard_access_token', data.access_token);
-        }
-        if (data.user) {
-          const authUser: AuthUser = {
-            email: data.user.email,
-            fullName: data.user.full_name || roleNames[role]?.fullName || 'Authorized User',
-            role: (data.user.role as UserRole) || role,
-            designation: data.user.designation || roleNames[role]?.designation || 'Staff',
-            department: data.user.department,
-            district: data.user.district,
-            state: data.user.state,
-            companyName: data.user.company_name,
-            gstNumber: data.user.gst_number,
-          };
-          setUser(authUser);
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('Backend login unavailable, falling back to local session:', e);
+    } catch (err: any) {
+      throw new Error(
+        err.name === 'TimeoutError' || err.message?.includes('timeout') || err.message?.includes('aborted')
+          ? 'Authentication server timed out. Please ensure the backend is running.'
+          : 'Unable to connect to authentication server. Please check your network or backend server.'
+      );
     }
 
-    // Graceful fallback for offline demo testing
+    if (!res.ok) {
+      let errorDetail = 'Invalid email or password';
+      try {
+        const data = await res.json();
+        if (data && data.detail) {
+          errorDetail = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        }
+      } catch {}
+      throw new Error(errorDetail);
+    }
+
+    const data = await res.json();
+    if (!data.access_token || !data.user) {
+      throw new Error('Authentication response missing access token or user profile');
+    }
+
+    localStorage.setItem('labelguard_access_token', data.access_token);
     const authUser: AuthUser = {
-      email,
-      fullName: roleNames[role]?.fullName || 'Demo User',
-      role,
-      designation: roleNames[role]?.designation || 'Staff',
+      email: data.user.email,
+      fullName: data.user.full_name || 'Authorized User',
+      role: data.user.role as UserRole,
+      designation: data.user.designation,
+      department: data.user.department,
+      district: data.user.district,
+      state: data.user.state,
+      companyName: data.user.company_name,
+      gstNumber: data.user.gst_number,
+      lutNumber: data.user.lut_number,
     };
 
     setUser(authUser);
-    try {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
-    } catch {}
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+    return authUser;
   }, []);
 
-  const register = useCallback(async (data: RegisterData) => {
+  const register = useCallback(async (data: RegisterData): Promise<AuthUser> => {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+    let res: Response;
     try {
-      const res = await fetch(`${apiBase}/auth/register`, {
+      res = await fetch(`${apiBase}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: data.email,
-          password: data.password || 'SecurePassword123!',
-          full_name: data.fullName,
+          email: data.email.trim(),
+          password: data.password,
+          full_name: data.fullName.trim(),
           role: data.role,
           designation: data.designation,
           department: data.department,
@@ -145,34 +151,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           state: data.state,
           company_name: data.companyName,
           gst_number: data.gstNumber,
+          lut_number: data.lutNumber,
+          badge_number: data.badgeNumber,
+          entity_category: data.entityCategory || data.entityType,
+          address: data.address,
+          organization: data.organization,
         }),
+        signal: AbortSignal.timeout(5000),
       });
-
-      if (res.ok) {
-        const resData = await res.json();
-        if (resData.access_token) {
-          localStorage.setItem('labelguard_access_token', resData.access_token);
-        }
-      }
-    } catch (e) {
-      console.warn('Backend registration error, using offline local session:', e);
+    } catch (err: any) {
+      throw new Error(
+        err.name === 'TimeoutError' || err.message?.includes('timeout') || err.message?.includes('aborted')
+          ? 'Registration server timed out. Please ensure the backend is running.'
+          : 'Unable to connect to registration server. Please ensure backend is running.'
+      );
     }
 
+    if (!res.ok) {
+      let errorDetail = 'Registration failed';
+      try {
+        const resData = await res.json();
+        if (resData && resData.detail) {
+          errorDetail = typeof resData.detail === 'string' ? resData.detail : JSON.stringify(resData.detail);
+        }
+      } catch {}
+      throw new Error(errorDetail);
+    }
+
+    const resData = await res.json();
+    if (resData.access_token) {
+      localStorage.setItem('labelguard_access_token', resData.access_token);
+    }
+
+    const userProfile = resData.user || {};
     const authUser: AuthUser = {
-      email: data.email,
-      fullName: data.fullName,
-      role: data.role,
-      designation: data.designation,
-      department: data.department,
-      district: data.district,
-      state: data.state,
-      companyName: data.companyName,
-      gstNumber: data.gstNumber,
-      lutNumber: data.lutNumber,
+      email: userProfile.email || data.email,
+      fullName: userProfile.full_name || data.fullName,
+      role: (userProfile.role as UserRole) || data.role,
+      designation: userProfile.designation || data.designation,
+      department: userProfile.department || data.department,
+      district: userProfile.district || data.district,
+      state: userProfile.state || data.state,
+      companyName: userProfile.company_name || data.companyName,
+      gstNumber: userProfile.gst_number || data.gstNumber,
+      lutNumber: userProfile.lut_number || data.lutNumber,
     };
 
     setUser(authUser);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+    return authUser;
   }, []);
 
   const logout = useCallback(() => {

@@ -80,13 +80,11 @@ function RegisterForm() {
 
     setIsLoading(true);
     try {
-      await register(formData);
+      const createdUser = await register(formData);
       setSuccess(true);
       setTimeout(() => {
-        if (selectedRole) {
-          router.push(getDefaultRoute(selectedRole));
-        }
-      }, 1500);
+        router.push(getDefaultRoute(createdUser?.role || selectedRole || 'vendor'));
+      }, 1000);
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
       setIsLoading(false);

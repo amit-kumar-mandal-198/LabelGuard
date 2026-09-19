@@ -23,6 +23,11 @@ class CurrentUserResponse(BaseModel):
     state: str | None = None
     company_name: str | None = None
     gst_number: str | None = None
+    lut_number: str | None = None
+    badge_number: str | None = None
+    entity_category: str | None = None
+    address: str | None = None
+    organization: str | None = None
 
 
 class RegisterRequest(BaseModel):
@@ -36,6 +41,11 @@ class RegisterRequest(BaseModel):
     state: str | None = None
     company_name: str | None = None
     gst_number: str | None = None
+    lut_number: str | None = None
+    badge_number: str | None = None
+    entity_category: str | None = None
+    address: str | None = None
+    organization: str | None = None
 
 
 class AuthSuccessResponse(BaseModel):

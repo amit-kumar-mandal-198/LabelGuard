@@ -15,25 +15,44 @@ export default function VendorRegistrationPage() {
   const [lutNo, setLutNo] = useState('LUT/2026/UP/0491');
   const [address, setAddress] = useState('Plot 42, Ecotech III, Greater Noida, UP 201306');
   const [email, setEmail] = useState('compliance@nutririch.com');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    await register({
-      email,
-      password: 'demoPassword123',
-      fullName: 'NutriRich Admin',
-      role: 'vendor',
-      companyName,
-      gstNumber: gstin,
-      lutNumber: lutNo,
-      entityCategory: entityType,
-      address,
-    });
-    setTimeout(() => {
-      router.push('/vendor/dashboard');
-    }, 1200);
+    setError(null);
+
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    try {
+      await register({
+        email,
+        password,
+        fullName: companyName ? `${companyName} Admin` : 'Vendor Admin',
+        role: 'vendor',
+        companyName,
+        gstNumber: gstin,
+        lutNumber: lutNo,
+        entityCategory: entityType,
+        address,
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        router.push('/vendor/dashboard');
+      }, 1200);
+    } catch (err: any) {
+      setError(err.message || 'Vendor registration failed. Please try again.');
+    }
   };
 
   return (
@@ -60,6 +79,12 @@ export default function VendorRegistrationPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 font-medium text-xs">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-1">
               <label className="font-semibold text-zinc-700">Official Compliance Email</label>
               <input
@@ -69,6 +94,31 @@ export default function VendorRegistrationPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-2.5 rounded-lg border border-zinc-300 font-medium"
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Create Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-zinc-300 font-medium"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="font-semibold text-zinc-700">Confirm Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Repeat password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-zinc-300 font-medium"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">

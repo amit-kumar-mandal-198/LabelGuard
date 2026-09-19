@@ -21,29 +21,13 @@ import {
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
-import { useAuth } from '@/lib/auth-context';
 import { canAccess } from '@/lib/route-guard';
 import InteractiveAiSandbox from '@/components/home/InteractiveAiSandbox';
 import StatutoryLifecycleStepper from '@/components/home/StatutoryLifecycleStepper';
 import AmbientAuroraSmoke from '@/components/home/AmbientAuroraSmoke';
 
 export default function Home() {
-  const { user, isAuthenticated, login } = useAuth();
   const router = useRouter();
-
-  /** Navigate directly to any portal page with seamless demo login */
-  const navigateTo = (href: string) => {
-    let targetRole: 'vendor' | 'inspector' | 'controller' | 'admin' | 'auditor' = 'vendor';
-    if (href.startsWith('/inspector') || href.startsWith('/scan')) targetRole = 'inspector';
-    else if (href.startsWith('/dashboard/district') || href.startsWith('/notices')) targetRole = 'controller';
-    else if (href.startsWith('/dashboard/admin') || href.startsWith('/admin')) targetRole = 'admin';
-    else if (href.startsWith('/search')) targetRole = 'auditor';
-
-    if (!isAuthenticated || !user || user.role !== targetRole) {
-      login(`${targetRole}@labelguard.gov.in`, 'demo', targetRole);
-    }
-    router.push(href);
-  };
 
   return (
     <div className="relative w-full flex flex-col items-center overflow-x-hidden">
@@ -59,9 +43,9 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-zinc-950 tracking-tight leading-tight">
-            Intelligent Legal Metrology <br className="hidden sm:inline" />
+            National Packaged Commodity <br className="hidden sm:inline" />
             <span className="text-emerald-700">
-              Compliance & Enforcement
+              Compliance & Verification Portal
             </span>
           </h1>
 

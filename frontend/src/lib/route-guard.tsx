@@ -91,54 +91,47 @@ export function getNavLinksForRole(role: UserRole): NavLink[] {
 }
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading, login } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; // Wait for localStorage to load
+    if (isLoading) return; // Wait for localStorage session to load
 
-    // Public routes — always accessible
+    // Public routes — accessible without login
     if (isPublicRoute(pathname)) {
-      if (isAuthenticated && user && (pathname === '/login' || pathname.startsWith('/register'))) {
-        router.replace(getDefaultRoute(user.role));
-      }
       return;
     }
 
-    // Protected route — not authenticated → auto login demo user matching target portal
+    // Protected route — not authenticated → redirect to /login
     if (!isAuthenticated || !user) {
-      let targetRole: UserRole = 'vendor';
-      if (pathname.startsWith('/inspector') || pathname.startsWith('/scan')) {
-        targetRole = 'inspector';
-      } else if (pathname.startsWith('/dashboard/district') || pathname.startsWith('/notices') || pathname.startsWith('/offenders')) {
-        targetRole = 'controller';
-      } else if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard/admin')) {
-        targetRole = 'admin';
-      } else if (pathname.startsWith('/search')) {
-        targetRole = 'auditor';
-      }
-      login(`${targetRole}@labelguard.gov.in`, 'demo', targetRole);
+      router.replace('/login');
       return;
     }
 
-    // Authenticated but wrong role for this route → auto switch role to match target portal
+    // Authenticated but unauthorized for this role's route → redirect to own role's dashboard
     if (!canAccess(user.role, pathname)) {
-      let targetRole: UserRole = user.role;
-      if (pathname.startsWith('/vendor')) targetRole = 'vendor';
-      else if (pathname.startsWith('/inspector') || pathname.startsWith('/scan')) targetRole = 'inspector';
-      else if (pathname.startsWith('/dashboard/district') || pathname.startsWith('/notices') || pathname.startsWith('/offenders')) targetRole = 'controller';
-      else if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard/admin')) targetRole = 'admin';
-      else if (pathname.startsWith('/search')) targetRole = 'auditor';
-
-      if (targetRole !== user.role) {
-        login(`${targetRole}@labelguard.gov.in`, 'demo', targetRole);
-      } else {
-        router.replace(getDefaultRoute(user.role));
-      }
+      router.replace(getDefaultRoute(user.role));
     }
-  }, [pathname, isAuthenticated, isLoading, user, router, login]);
+  }, [pathname, isAuthenticated, isLoading, user, router]);
 
-  // For seamless demo access: render children directly
+  // While checking authentication on protected routes, prevent flashing protected UI
+  if (isLoading && !isPublicRoute(pathname)) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If unauthenticated and on a protected route, block rendering while redirect takes place
+  if (!isPublicRoute(pathname) && (!isAuthenticated || !user)) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-sm font-medium text-zinc-500">Redirecting to login...</div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }

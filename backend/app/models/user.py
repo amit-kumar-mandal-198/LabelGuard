@@ -21,6 +21,18 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    designation: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    department: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    district: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    state: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    gst_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    lut_number: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    badge_number: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    entity_category: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    organization: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

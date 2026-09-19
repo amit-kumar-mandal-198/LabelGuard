@@ -36,30 +36,42 @@ const FEATURES = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, user, login } = useAuth();
+  const { isAuthenticated, user, login, logout } = useAuth();
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>('vendor');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      router.push(getDefaultRoute(user.role));
-    }
-  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     setIsLoading(true);
+    setError(null);
     try {
-      await login(email, password, selectedRole);
-      router.push(getDefaultRoute(selectedRole));
-    } catch {
+      const loggedInUser = await login(email, password);
+      router.push(getDefaultRoute(loggedInUser.role));
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('demo1234');
+    setError(null);
+    setIsLoading(true);
+    try {
+      const loggedInUser = await login(demoEmail, 'demo1234');
+      router.push(getDefaultRoute(loggedInUser.role));
+    } catch (err: any) {
+      setError(err.message || 'Demo authentication failed. Please check backend.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -175,41 +187,64 @@ export default function LoginPage() {
               <p className="text-sm text-zinc-500">Select a quick demo portal or sign in below</p>
             </div>
 
+            {/* Active Session Notice if already logged in */}
+            {isAuthenticated && user && (
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-300 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-900">Active Session Detected</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+                    {user.role}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-700">
+                  Currently signed in as <strong>{user.email}</strong> ({user.fullName})
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => router.push(getDefaultRoute(user.role))}
+                    className="flex-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold"
+                  >
+                    Go to Dashboard →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="py-1.5 px-3 bg-white hover:bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-semibold"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Error banner */}
+            {error && (
+              <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs font-medium text-red-700 flex items-start gap-2.5">
+                <span className="w-4 h-4 rounded-full bg-red-200 text-red-800 flex items-center justify-center font-bold text-[10px] flex-shrink-0 mt-0.5">✕</span>
+                <span>{error}</span>
+              </div>
+            )}
+
             {/* Quick Demo Access Pills */}
             <div className="mb-6 bg-emerald-50/80 border border-emerald-200 rounded-xl p-3.5 space-y-2">
               <p className="text-xs font-bold text-emerald-900 flex items-center justify-between">
-                <span>⚡ Quick Demo Portals</span>
-                <span className="text-[10px] font-normal text-emerald-700">Tap to test immediately</span>
+                <span>⚡ Quick Demo Credentials</span>
+                <span className="text-[10px] font-normal text-emerald-700">Authenticates via DB</span>
               </p>
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={async () => {
-                    setIsLoading(true);
-                    try {
-                      await login('vendor@labelguard.gov.in', 'demo1234', 'vendor');
-                      router.push('/vendor/audit/new');
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
+                  onClick={() => handleDemoLogin('vendor@labelguard.gov.in')}
                   className="px-2.5 py-2 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
-                  🟢 Vendor Audit
+                  🟢 Vendor Admin
                 </button>
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={async () => {
-                    setIsLoading(true);
-                    try {
-                      await login('inspector@labelguard.gov.in', 'demo1234', 'inspector');
-                      router.push('/inspector/scans');
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
+                  onClick={() => handleDemoLogin('inspector@labelguard.gov.in')}
                   className="px-2.5 py-2 bg-white hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🔵 Field Inspector
@@ -217,15 +252,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={async () => {
-                    setIsLoading(true);
-                    try {
-                      await login('controller@labelguard.gov.in', 'demo1234', 'controller');
-                      router.push('/dashboard/district');
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
+                  onClick={() => handleDemoLogin('controller@labelguard.gov.in')}
                   className="px-2.5 py-2 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🟡 Controller Hub
@@ -233,15 +260,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={async () => {
-                    setIsLoading(true);
-                    try {
-                      await login('admin@labelguard.gov.in', 'demo1234', 'admin');
-                      router.push('/dashboard/admin');
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
+                  onClick={() => handleDemoLogin('admin@labelguard.gov.in')}
                   className="px-2.5 py-2 bg-white hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1 transition text-left truncate disabled:opacity-50"
                 >
                   🟣 National Admin
@@ -251,27 +270,6 @@ export default function LoginPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Role Dropdown */}
-              <div>
-                <label htmlFor="login-role" className="block text-xs font-semibold text-zinc-700 mb-1.5">
-                  Sign in as
-                </label>
-                <div className="relative">
-                  <select
-                    id="login-role"
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                    className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer transition-colors hover:border-zinc-400"
-                  >
-                    {ROLE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                </div>
-              </div>
 
               {/* Email */}
               <div>
